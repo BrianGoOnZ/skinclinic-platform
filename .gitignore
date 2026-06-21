@@ -1,3 +1,7 @@
 node_modules/
 dist/
 .env
+# Datos locales de la base de datos (Docker)
+mysql_data/
+# Ocultar también el script de inicialización
+init.sql
