@@ -5,3 +5,5 @@ dist/
 mysql_data/
 # Ocultar también el script de inicialización
 init.sql
+# Ocultar el diagrama local de Draw.io
+*.drawio
