@@ -12,7 +12,7 @@ export default function Login() {
         padding: "20px",
       }}
     >
-      <h1>Estructura base lista. prueba 2</h1>
+      <h1>Estructura base lista.</h1>
     </div>
   );
 }
