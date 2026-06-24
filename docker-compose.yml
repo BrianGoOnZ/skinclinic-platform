@@ -9,10 +9,10 @@ services:
     container_name: skinclinic-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: mode321 #-- Cambia esto por tu contraseña o usa variables de entorno
+      MYSQL_ROOT_PASSWORD: mode321
       MYSQL_DATABASE: clinic_management_db
     ports:
-      - "3306:3306" #-- Expone el puerto para que la extensión de VS Code se conecte
+      - "3306:3306"
     volumes:
       # 1. Guarda los datos reales en tu carpeta local (asegúrate de que esté en tu .gitignore)
       - ./mysql_data:/var/lib/mysql
@@ -34,12 +34,12 @@ services:
       - ./backend:/app
       - /app/node_modules
     environment:
-      - DB_HOST=db #-- Node.js usará el nombre del servicio 'db' para conectarse en lugar de localhost
+      - DB_HOST=db
       - DB_USER=root
-      - DB_PASSWORD=root_password_seguro
+      - DB_PASSWORD=mode321
       - DB_NAME=clinic_management_db
     depends_on:
-      - db #-- Asegura que el backend espere a que el contenedor de la BD esté listo
+      - db
     networks:
       - skinclinic-network
 
