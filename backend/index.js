@@ -2,12 +2,16 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import sequelize from "./src/config/db.js";
+import authRoutes from "./src/routes/authRoutes.js"; // <-- 1. Agrega esta importación
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+// <-- 2. Vincula las rutas aquí abajo de los middlewares globales
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,7 +23,7 @@ async function connectWithRetry(retries = 5, delay = 5000) {
       console.log(
         "✅ Connection to Docker MySQL has been established successfully via Sequelize.",
       );
-      return; // Conexión exitosa, salimos del ciclo
+      return;
     } catch (error) {
       retries--;
       console.log(
@@ -30,7 +34,7 @@ async function connectWithRetry(retries = 5, delay = 5000) {
           "❌ Max connection retries reached. Unable to connect to the database:",
           error,
         );
-        process.exit(1); // Cerramos si definitivamente no se pudo
+        process.exit(1);
       }
       await new Promise((res) => setTimeout(res, delay));
     }
@@ -38,7 +42,6 @@ async function connectWithRetry(retries = 5, delay = 5000) {
 }
 
 async function startServer() {
-  // Esperar a que la BD esté lista antes de levantar Express
   await connectWithRetry();
 
   app.listen(PORT, () => {

@@ -7,15 +7,20 @@ const User = sequelize.define(
   {
     id: {
       type: DataTypes.INTEGER,
-      autoIncrement: true,
       primaryKey: true,
+      autoIncrement: true,
+      field: "user_id", // Mapea correctamente a user_id de la BD
     },
     name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
+    phone: {
+      type: DataTypes.STRING(10),
+      allowNull: false, // Requerido en tu SQL
+    },
     email: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(191),
       allowNull: false,
       unique: true,
       validate: {
@@ -26,29 +31,63 @@ const User = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    role: {
-      type: DataTypes.ENUM("Admin", "Collaborator"),
-      allowNull: false,
-      defaultValue: "Collaborator",
+    birth: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
-    status: {
-      type: DataTypes.ENUM("Active", "Inactive"),
+    gender: {
+      type: DataTypes.ENUM("H", "M", "ND"),
+      allowNull: false, // Requerido en tu SQL
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    jobPosition: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+      field: "job_position",
+    },
+    emergencyContactName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: "emergency_contact_name",
+    },
+    emergencyContactPhone: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      field: "emergency_contact_phone",
+    },
+    medicalInsuranceNumber: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      field: "medical_insurance_number",
+    },
+    role: {
+      type: DataTypes.ENUM("Administrador", "Colaborador"),
       allowNull: false,
-      defaultValue: "Active", // Soporte nativo para Baja Lógica (RF-02)
+      defaultValue: "Colaborador",
+      field: "rol", // Mapea a la columna 'rol' en español
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: "is_active", // Mapea a 'is_active' para la baja lógica
     },
   },
   {
-    tableName: "users", // Ajusta al nombre exacto en minúsculas/plurale de tu init.sql
-    timestamps: true, // Crea automáticamente createdAt y updatedAt
+    tableName: "Users", // Nota la 'U' mayúscula como en tu SQL
+    timestamps: true,
+    createdAt: "created_at", // Mapea al campo nativo de tu SQL
+    updatedAt: false, // Tu SQL no tiene updated_at, lo desactivamos para evitar errores
     hooks: {
-      // Hook automático antes de guardar un usuario nuevo
       beforeCreate: async (user) => {
         if (user.password) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
         }
       },
-      // Hook automático antes de actualizar la contraseña
       beforeUpdate: async (user) => {
         if (user.changed("password")) {
           const salt = await bcrypt.genSalt(10);
@@ -59,7 +98,6 @@ const User = sequelize.define(
   },
 );
 
-// Método personalizado para verificar contraseñas en el Login más adelante
 User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
