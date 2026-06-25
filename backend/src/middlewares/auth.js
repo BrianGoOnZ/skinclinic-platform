@@ -37,12 +37,10 @@ export const protect = async (req, res, next) => {
     req.user = decoded; // Inyecta id y role en la petición
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json({
-        message: "Not authorized, token expired or invalid",
-        error: error.message,
-      });
+    return res.status(401).json({
+      message: "Not authorized, token expired or invalid",
+      error: error.message,
+    });
   }
 };
 
