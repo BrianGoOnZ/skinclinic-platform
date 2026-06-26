@@ -2,7 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import sequelize from "./src/config/db.js";
-import authRoutes from "./src/routes/authRoutes.js"; // <-- 1. Agrega esta importación
+import authRoutes from "./src/routes/authRoutes.js";
+import customerRoutes from "./src/routes/customerRoutes.js";
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ app.use(cookieParser());
 
 // <-- 2. Vincula las rutas aquí abajo de los middlewares globales
 app.use("/api/auth", authRoutes);
+app.use("/api/customers", customerRoutes);
 
 const PORT = process.env.PORT || 5000;
 
