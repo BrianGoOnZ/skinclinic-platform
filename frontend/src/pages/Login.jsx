@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../services/api";
 import "../styles/Login.css";
+import DashboardPage from "./Dashboard";
 
 const LoginSPA = () => {
   const [email, setEmail] = useState("");
@@ -25,32 +26,16 @@ const LoginSPA = () => {
     }
   };
 
+  // ==========================================
+  // RENDERIZADO CONDICIONAL MODELO SPA
+  // ==========================================
   if (isLoggedIn) {
-    return (
-      <div
-        style={{
-          padding: "30px",
-          textAlign: "center",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <h2 style={{ color: "#20828A" }}>
-          ¡Bienvenido al Panel de Skinclinic!
-        </h2>
-        <p>
-          Sesión activa como: <strong>{user?.name || email}</strong>
-        </p>
-        <button
-          onClick={() => setIsLoggedIn(false)}
-          className="submit-btn"
-          style={{ maxWidth: "200px", margin: "20px auto" }}
-        >
-          Cerrar Sesión
-        </button>
-      </div>
-    );
+    return <DashboardPage user={user} onLogout={() => setIsLoggedIn(false)} />;
   }
 
+  // ==========================================
+  // FORMULARIO DE INICIO DE SESIÓN
+  // ==========================================
   return (
     <div className="login-page-wrapper">
       <div className="login-card">

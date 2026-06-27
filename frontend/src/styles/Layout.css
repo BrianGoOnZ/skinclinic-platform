@@ -1,0 +1,109 @@
+/* Estructura general de la app */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #f1f5f7;
+  overflow-x: hidden;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Sidebar izquierdo */
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 25px 20px;
+  border-right: 1px solid rgba(167, 207, 210, 0.2);
+  flex-shrink: 0;
+}
+
+/* Items del menu normales */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 20px;
+  color: #3a6366;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #f1f5f7;
+  color: #012438;
+}
+
+/* Item seleccionado */
+.menu-item.active {
+  background-color: #012438;
+  color: #ffffff;
+}
+
+/* Contenedor de la derecha (navbar + contenido) */
+.main-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Barra superior */
+.navbar {
+  height: 80px;
+  background-color: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.navbar-welcome h2 {
+  margin: 0;
+  color: #012438;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.navbar-welcome p {
+  margin: 4px 0 0 0;
+  color: #5b9fa6;
+  font-size: 14px;
+}
+
+/* Alineacion de la derecha (buscador, campana y perfil) */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+/* Perfil de usuario al lado del avatar */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Circulo del avatar */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #a7cfd2;
+}
+
+.user-name {
+  color: #012438;
+  font-weight: 500;
+}
+
+/* Contenedor de las vistas */
+.stage-content {
+  padding: 20px 40px 40px 40px;
+  flex-grow: 1;
+}
