@@ -20,7 +20,7 @@ router.get("/dashboard-general", protect, (req, res) => {
 // Ruta con restricción de rol: SÓLO usuarios con rol 'Administrador' pueden entrar
 router.get("/admin-only", protect, restrictTo("Administrador"), (req, res) => {
   res.status(200).json({
-    message: "Access granted. Welcome to the admin panel!",
+    message: "Access granted. Welcome to the admin panel!",``
   });
 });
 

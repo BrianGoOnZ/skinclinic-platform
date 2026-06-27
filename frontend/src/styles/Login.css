@@ -1,0 +1,191 @@
+/* Reset global para rellenar toda la pantalla sin bordes ni barras */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: #a7cfd2; /* El fondo oficial */
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+/* Contenedor principal */
+.login-page-wrapper {
+  background-color: #a7cfd2;
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tarjeta Blanca Central */
+.login-card {
+  background-color: #ffffff;
+  border-radius: 30px;
+  padding: 40px 50px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.login-card h1 {
+  color: #20828a;
+  fontsize: 36px;
+  margin: 0 0 10px 0;
+  font-weight: 400;
+}
+
+.login-card .subtitle {
+  color: #5b9fa6;
+  font-size: 14px;
+  margin: 0 0 25px 0;
+}
+
+/* Botón de Google */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 50px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.google-btn:hover {
+  background-color: #f7f9f9;
+}
+
+/* Separador ó */
+.separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  color: #5b9fa6;
+  font-size: 14px;
+}
+
+.separator .line {
+  flex: 1;
+  height: 1px;
+  background-color: #a7cfd2;
+}
+
+.separator span {
+  padding: 0 10px;
+}
+
+/* Formulario e Inputs */
+.login-form {
+  text-align: left;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+  color: #20828a;
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #a7cfd2;
+  border-radius: 50px;
+  padding: 14px 20px;
+  font-size: 14px;
+  outline: none;
+  background-color: #f3f9fa;
+  color: #333;
+}
+
+.input-group input:focus {
+  border-color: #197e88;
+  box-shadow: 0 0 0 2px rgba(25, 126, 136, 0.1);
+}
+
+/* Opciones Extras */
+.options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #20828a;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.forgot-link {
+  color: #5b9fa6;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Botón Iniciar Sesión */
+.submit-btn {
+  width: 100%;
+  background-color: #197e88;
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0px 4px 10px rgba(25, 126, 136, 0.2);
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #156870;
+}
+
+/* Footer de Registro */
+.register-footer {
+  margin-top: 25px;
+  font-size: 13px;
+  color: #20828a;
+}
+
+.register-footer a {
+  color: #197e88;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}
