@@ -1,83 +1,38 @@
 import React from "react";
-// Importamos los iconos profesionales correspondientes para el Navbar
 import { LuSearch, LuBell } from "react-icons/lu";
 
 const Navbar = ({ userName }) => {
   return (
-    <header className="navbar">
-      <div className="navbar-welcome">
-        <h2>Hola {userName || "Usuario"},</h2>
-        <p>Bienvenida de vuelta al panel administrativo</p>
+    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 bg-transparent gap-4 w-full">
+      <div className="text-left">
+        <h2 className="text-xl font-bold text-primary">
+          Hola {userName || "Usuario"},
+        </h2>
+        <p className="text-sm text-accent font-medium mt-0.5">
+          Bienvenida de vuelta al panel administrativo
+        </p>
       </div>
 
-      <div className="navbar-actions">
-        {/* Buscador Estilizado */}
-        <div
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: "50px",
-            padding: "10px 18px",
-            display: "flex",
-            alignItems: "center",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-            border: "1px solid rgba(167, 207, 210, 0.2)",
-          }}
-        >
-          {/* Icono de Lupa Profesional */}
-          <span
-            style={{
-              marginRight: "10px",
-              color: "#5B9FA6",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+      <div className="flex items-center gap-6 ml-auto sm:ml-0">
+        <div className="bg-white rounded-full px-[18px] py-2.5 flex items-center shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-borderClinik/20">
+          <span className="mr-2.5 text-accent flex items-center">
             <LuSearch size={18} />
           </span>
           <input
             type="text"
             placeholder="Buscar..."
-            style={{
-              border: "none",
-              outline: "none",
-              fontSize: "14px",
-              width: "160px",
-              backgroundColor: "transparent",
-              color: "#20828A",
-            }}
+            className="border-none outline-none text-sm w-40 bg-transparent text-secondary placeholder-accent/60"
           />
         </div>
 
-        {/* Campana de Notificaciones Profesional */}
-        <div
-          style={{
-            fontSize: "20px",
-            cursor: "pointer",
-            color: "#20828A",
-            display: "flex",
-            alignItems: "center",
-            position: "relative",
-          }}
-        >
+        <div className="cursor-pointer text-secondary flex items-center relative p-1 hover:text-primary transition-colors">
           <LuBell size={22} />
-          {/* Puntito de notificación opcional por si quieres simular una activa como en Figma */}
-          <span
-            style={{
-              position: "absolute",
-              top: "2px",
-              right: "2px",
-              width: "8px",
-              height: "8px",
-              backgroundColor: "#197E88",
-              borderRadius: "50%",
-            }}
-          ></span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full"></span>
         </div>
 
-        {/* Perfil del Usuario Logueado */}
-        <div className="user-profile">
-          <div className="user-avatar"></div>
-          <span className="user-name">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-sm overflow-hidden bg-[url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=150')] bg-cover bg-center"></div>
+          <span className="text-sm font-bold text-primary hidden sm:block">
             {userName?.split(" ")[0] || "Admin"}
           </span>
         </div>

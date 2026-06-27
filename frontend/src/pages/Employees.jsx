@@ -7,7 +7,6 @@ import {
   LuTrash2,
   LuRefreshCw,
 } from "react-icons/lu";
-import "../styles/Employees.css";
 import NewEmployeeModal from "../components/NewEmployeeModal";
 
 const Employees = () => {
@@ -52,103 +51,122 @@ const Employees = () => {
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "25px",
-        width: "100%",
-      }}
-    >
-      <div className="employees-header">
-        <h1>Gestión de Colaboradores</h1>
-        <button onClick={fetchEmployees} className="sync-btn">
-          <LuRefreshCw size={16} /> Sincronizar Datos
+    <div className="flex flex-col gap-6 w-full text-left">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-xl font-bold text-primary">
+          Gestión de Colaboradores
+        </h1>
+        <button
+          onClick={fetchEmployees}
+          className="flex items-center justify-center gap-2 px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer self-start sm:self-center"
+        >
+          <LuRefreshCw size={14} /> Sincronizar Datos
         </button>
       </div>
 
-      <div className="employees-toolbar">
-        <div className="search-container">
-          <LuSearch size={18} className="search-icon" />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <LuSearch
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-accent"
+          />
           <input
             type="text"
             placeholder="Buscar Colaborador..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
           />
         </div>
 
-        <button className="add-btn" onClick={() => setIsModalOpen(true)}>
-          <LuPlus size={16} /> Nuevo Colaborador
+        <button
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <LuPlus size={14} /> Nuevo Colaborador
         </button>
       </div>
 
-      <div className="table-card">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
-          <p style={{ color: "#3a6366", textAlign: "center", padding: "20px" }}>
+          <p className="text-secondary text-center font-medium p-8 text-sm">
             Cargando colaboradores...
           </p>
         ) : error ? (
-          <p style={{ color: "#e53935", textAlign: "center", padding: "20px" }}>
+          <p className="text-red-600 text-center font-medium p-8 text-sm">
             {error}
           </p>
         ) : filteredEmployees.length === 0 ? (
-          <p style={{ color: "#5b9fa6", textAlign: "center", padding: "20px" }}>
+          <p className="text-accent text-center font-medium p-8 text-sm">
             No se encontraron colaboradores.
           </p>
         ) : (
-          <table className="employees-table">
-            <thead>
-              <tr>
-                <th style={{ width: "45%" }}>Colaborador</th>
-                <th style={{ width: "35%" }}>Rol</th>
-                <th style={{ width: "20%", textAlign: "right" }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEmployees.map((emp) => (
-                <tr
-                  key={emp.user_id}
-                  style={{ opacity: emp.is_active ? 1 : 0.5 }}
-                >
-                  <td>
-                    <div className="colab-info">
-                      <div className="colab-avatar">
-                        {getInitials(emp.name)}
-                      </div>
-                      <div className="colab-meta">
-                        <span className="colab-name">
-                          {emp.name} {!emp.is_active && "(Inactivo)"}
-                        </span>
-                        <span className="colab-email">{emp.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`colab-role ${emp.rol === "Administrador" ? "admin" : "staff"}`}
-                    >
-                      {emp.rol}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="actions-cell">
-                      <button className="edit-btn">
-                        <LuPencil size={18} />
-                      </button>
-                      <button className="delete-btn">
-                        <LuTrash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/70">
+                  <th className="p-4 text-xs font-bold text-primary w-[45%]">
+                    Colaborador
+                  </th>
+                  <th className="p-4 text-xs font-bold text-primary w-[35%]">
+                    Rol
+                  </th>
+                  <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
+                    Acciones
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredEmployees.map((emp) => (
+                  <tr
+                    key={emp.user_id}
+                    className="hover:bg-gray-50/50 transition-colors"
+                    style={{ opacity: emp.is_active ? 1 : 0.5 }}
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold text-xs shrink-0">
+                          {getInitials(emp.name)}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-semibold text-primary truncate">
+                            {emp.name} {!emp.is_active && "(Inactivo)"}
+                          </span>
+                          <span className="text-xs text-accent truncate">
+                            {emp.email}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 vertical-middle">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${
+                          emp.rol === "Administrador"
+                            ? "bg-red-50 text-red-700 border border-red-100"
+                            : "bg-blue-50 text-secondary border border-blue-100"
+                        }`}
+                      >
+                        {emp.rol}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right vertical-middle">
+                      <div className="flex items-center justify-end gap-2">
+                        <button className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer">
+                          <LuPencil size={16} />
+                        </button>
+                        <button className="p-1.5 text-accent hover:text-red-600 transition-colors cursor-pointer">
+                          <LuTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-      {/* Reemplaza el bloque anterior por esta línea limpia */}
+
       <NewEmployeeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

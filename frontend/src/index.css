@@ -1,3 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #012438;
+  --color-secondary: #197e88;
+  --color-accent: #5b9fa6;
+  --color-borderClinik: #a7cfd2;
+}

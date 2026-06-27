@@ -1,6 +1,5 @@
 import { useState } from "react";
 import api from "../services/api";
-import "../styles/Login.css";
 import DashboardPage from "./Dashboard";
 
 const LoginSPA = () => {
@@ -26,39 +25,35 @@ const LoginSPA = () => {
     }
   };
 
-  // ==========================================
-  // RENDERIZADO CONDICIONAL MODELO SPA
-  // ==========================================
+  // Renderizado condicional para el modelo SPA
   if (isLoggedIn) {
     return <DashboardPage user={user} onLogout={() => setIsLoggedIn(false)} />;
   }
 
-  // ==========================================
-  // FORMULARIO DE INICIO DE SESIÓN
-  // ==========================================
   return (
-    <div className="login-page-wrapper">
-      <div className="login-card">
-        <h1>Iniciar Sesión</h1>
-        <p className="subtitle">Ingresa tus credenciales para acceder</p>
+    // Contenedor principal centrado con fondo oscuro corporativo
+    <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
+      {/* Tarjeta de Login blanca */}
+      <div className="bg-white w-full max-w-[450px] rounded-2xl p-8 shadow-2xl text-left">
+        <h1 className="text-2xl font-bold text-primary mb-1 text-center">
+          Iniciar Sesión
+        </h1>
+        <p className="text-sm text-accent mb-6 text-center">
+          Ingresa tus credenciales para acceder
+        </p>
 
+        {/* Alerta de Error estilizada */}
         {error && (
-          <p
-            style={{
-              color: "#721c24",
-              fontSize: "14px",
-              backgroundColor: "#f8d7da",
-              padding: "10px",
-              borderRadius: "8px",
-              margin: "0 0 15px 0",
-            }}
-          >
+          <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
             {error}
           </p>
         )}
 
         {/* Botón de Google */}
-        <button type="button" className="google-btn">
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 p-2.5 border border-borderClinik rounded-lg text-sm font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer mb-5"
+        >
           <svg width="18" height="18" viewBox="0 0 18 18">
             <path
               fill="#4285F4"
@@ -80,58 +75,76 @@ const LoginSPA = () => {
           Ingresar con Google
         </button>
 
-        {/* Separador ó */}
-        <div className="separator">
-          <div className="line"></div>
-          <span>ó</span>
-          <div className="line"></div>
+        {/* Separador "ó" */}
+        <div className="flex items-center my-5">
+          <div className="flex-1 border-t border-gray-200"></div>
+          <span className="px-3 text-xs text-accent font-medium">ó</span>
+          <div className="flex-1 border-t border-gray-200"></div>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="input-group">
-            <label>Correo Electrónico</label>
+        {/* Formulario de Login */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-primary">
+              Correo Electrónico
+            </label>
             <input
               type="email"
               placeholder="ejemplo@correo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
             />
           </div>
 
-          <div className="input-group">
-            <label>Contraseña</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-primary">Contraseña</label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
             />
           </div>
 
-          <div className="options-row">
-            <label className="remember-me">
+          {/* Fila de opciones adicionales */}
+          <div className="flex items-center justify-between text-xs mt-1">
+            <label className="flex items-center gap-2 text-primary font-medium cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                className="accent-secondary h-4 w-4 rounded border-borderClinik"
               />
               Recuérdame
             </label>
-            <a href="#forgot" className="forgot-link">
+            <a
+              href="#forgot"
+              className="text-secondary font-semibold hover:underline"
+            >
               ¿Olvidaste tu contraseña?
             </a>
           </div>
 
-          <button type="submit" className="submit-btn">
+          <button
+            type="submit"
+            className="w-full mt-2 p-2.5 rounded-lg bg-secondary text-white text-sm font-bold hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
+          >
             Iniciar Sesión
           </button>
         </form>
 
-        <p className="register-footer">
-          ¿No tienes una cuenta? <a href="#register">Regístrate aquí</a>
+        <p className="text-xs text-center text-accent mt-6">
+          ¿No tienes una cuenta?{" "}
+          <a
+            href="#register"
+            className="text-secondary font-bold hover:underline"
+          >
+            Regístrate aquí
+          </a>
         </p>
       </div>
     </div>
