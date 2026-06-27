@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import cors from "cors"; // 1. Agregamos el import de CORS
 import sequelize from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
@@ -8,10 +9,19 @@ import customerRoutes from "./src/routes/customerRoutes.js";
 dotenv.config();
 
 const app = express();
+
+// Configuración de CORS con credenciales para tu React
+app.use(
+  cors({
+    origin: "http://localhost:5173", // El puerto por defecto de Vite
+    credentials: true, // Permite que las cookies HTTPOnly viajen entre puertos
+  }),
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
-// <-- 2. Vincula las rutas aquí abajo de los middlewares globales
+// Vincula las rutas aquí abajo de los middlewares globales
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 
