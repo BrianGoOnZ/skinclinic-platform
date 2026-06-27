@@ -1,12 +1,13 @@
 import express from "express";
-import { register, login } from "../controllers/authController.js";
-import { protect, restrictTo } from "../middlewares/auth.js"; // <-- Importamos los policías
+import { register, login, getAllUsers } from "../controllers/authController.js";
+import { protect, restrictTo } from "../middlewares/auth.js";
 
 const router = express.Router();
 
 // Endpoints públicos de autenticación
 router.post("/register", register);
 router.post("/login", login);
+router.get("/usuarios", protect, getAllUsers);
 
 // ENDPOINTS DE PRUEBA DE SEGURIDAD (Rutas Protegidas)
 

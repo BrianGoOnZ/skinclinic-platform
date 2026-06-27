@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+import Employees from "./Employees"; // 👈 Importación correcta en inglés
 import "../styles/Layout.css";
 
 const DashboardPage = ({ user, onLogout }) => {
@@ -38,15 +39,20 @@ const DashboardPage = ({ user, onLogout }) => {
             </div>
           )}
 
-          {/* Marcadores de posición para las otras vistas */}
-          {activeView !== "dashboard" && activeView !== "clientes" && (
-            <div>
-              <h3 style={{ color: "#20828A" }}>
-                Panel de {activeView.toUpperCase()}
-              </h3>
-              <p>Sección en desarrollo para la gestión interna.</p>
-            </div>
-          )}
+          {/* ✨ Nueva vista real para empleados/colaboradores */}
+          {activeView === "empleados" && <Employees />}
+
+          {/* Marcadores de posición para las otras vistas (excluimos empleados) */}
+          {activeView !== "dashboard" &&
+            activeView !== "clientes" &&
+            activeView !== "empleados" && (
+              <div>
+                <h3 style={{ color: "#20828A" }}>
+                  Panel de {activeView.toUpperCase()}
+                </h3>
+                <p>Sección en desarrollo para la gestión interna.</p>
+              </div>
+            )}
         </main>
       </div>
     </div>

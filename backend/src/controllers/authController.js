@@ -36,12 +36,10 @@ export const register = async (req, res) => {
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Server error during registration",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Server error during registration",
+      error: error.message,
+    });
   }
 };
 
@@ -87,5 +85,23 @@ export const login = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error during login", error: error.message });
+  }
+};
+
+// Obtener todos los colaboradores para la pantalla del Frontend
+export const getAllUsers = async (req, res) => {
+  try {
+    // Usamos los campos idénticos a las columnas reales de tu CREATE TABLE Users
+    const usuarios = await User.findAll({
+      attributes: ["user_id", "name", "email", "rol", "is_active"],
+      order: [["name", "ASC"]],
+    });
+
+    return res.status(200).json(usuarios);
+  } catch (error) {
+    console.error("Error al consultar usuarios en MySQL:", error);
+    return res.status(500).json({
+      message: "Error interno del servidor al obtener colaboradores",
+    });
   }
 };

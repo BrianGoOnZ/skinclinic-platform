@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import cors from "cors"; // 1. Agregamos el import de CORS
+import cors from "cors";
 import sequelize from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
@@ -33,17 +33,17 @@ async function connectWithRetry(retries = 5, delay = 5000) {
     try {
       await sequelize.authenticate();
       console.log(
-        "✅ Connection to Docker MySQL has been established successfully via Sequelize.",
+        "Connection to Docker MySQL has been established successfully via Sequelize.",
       );
       return;
     } catch (error) {
       retries--;
       console.log(
-        `⚠️ Database not ready yet. Retrying in ${delay / 1000}s... (${retries} retries left)`,
+        `Database not ready yet. Retrying in ${delay / 1000}s... (${retries} retries left)`,
       );
       if (retries === 0) {
         console.error(
-          "❌ Max connection retries reached. Unable to connect to the database:",
+          "Max connection retries reached. Unable to connect to the database:",
           error,
         );
         process.exit(1);
@@ -57,7 +57,7 @@ async function startServer() {
   await connectWithRetry();
 
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 

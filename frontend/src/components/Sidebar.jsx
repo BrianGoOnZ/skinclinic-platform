@@ -11,6 +11,7 @@ import {
 } from "react-icons/lu";
 
 const Sidebar = ({ activeView, setActiveView, onLogout }) => {
+  // Navigation structural elements configuration
   const menuItems = [
     {
       id: "dashboard",
@@ -26,45 +27,14 @@ const Sidebar = ({ activeView, setActiveView, onLogout }) => {
 
   return (
     <aside className="sidebar">
-      {/* ─── CONTENEDOR OPTIMIZADO PARA EL LOGO CORPORATIVO ─── */}
-      <div
-        className="sidebar-logo"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: "8px",
-        }}
-      >
-        {/* Espacio reservado para la imagen del logo */}
-        <div
-          className="logo-image-placeholder"
-          style={{
-            width: "180px",
-            height: "50px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            backgroundColor:
-              "transparent" /* Cambiar a fondo gris si quieres ver la caja temporalmente */,
-            borderRadius: "8px",
-          }}
-        >
-          {/* Cuando tenga el logo listo, descomentar la línea de abajo y borra el texto provisional */}
-          {/* <img src="/assets/logo-depilclinik.svg" alt="Depil Clinik Logo" style={{ maxWidth: '100%', maxHeight: '100%' }} /> */}
-          <span
-            style={{
-              fontSize: "22px",
-              fontWeight: "800",
-              color: "#197E88",
-              letterSpacing: "0.5px",
-            }}
-          >
-            DEPILCLINIK
-          </span>
+      {/* Corporate Identity Branding Container */}
+      <div className="sidebar-logo">
+        <div className="logo-image-placeholder">
+          <span>DEPILCLINIK</span>
         </div>
       </div>
 
+      {/* Main Administrative Navigation Menu */}
       <nav className="sidebar-menu">
         {menuItems.map((item) => (
           <div
@@ -72,42 +42,26 @@ const Sidebar = ({ activeView, setActiveView, onLogout }) => {
             className={`menu-item ${activeView === item.id ? "active" : ""}`}
             onClick={() => setActiveView(item.id)}
           >
-            <span
-              className="menu-icon"
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              {item.icon}
-            </span>
+            <span className="menu-icon">{item.icon}</span>
             <span>{item.label}</span>
           </div>
         ))}
       </nav>
 
-      {/* Footer del Sidebar */}
-      <div
-        style={{
-          marginTop: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-        }}
-      >
+      {/* System Utilities Footer Actions */}
+      <div className="sidebar-footer">
         <div
           className={`menu-item ${activeView === "ajustes" ? "active" : ""}`}
           onClick={() => setActiveView("ajustes")}
         >
-          <span style={{ display: "flex", alignItems: "center" }}>
+          <span className="menu-icon">
             <LuSettings size={20} />
           </span>
           <span>Ajustes</span>
         </div>
 
-        <div
-          className="menu-item"
-          onClick={onLogout}
-          style={{ color: "#d9534f" }}
-        >
-          <span style={{ display: "flex", alignItems: "center" }}>
+        <div className="menu-item logout-action" onClick={onLogout}>
+          <span className="menu-icon">
             <LuLogOut size={20} />
           </span>
           <span>Cerrar Sesión</span>
