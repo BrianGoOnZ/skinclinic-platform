@@ -170,6 +170,7 @@ const Employees = () => {
       <NewEmployeeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onRefresh={fetchEmployees}
       />
     </div>
   );

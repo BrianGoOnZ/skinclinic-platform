@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { LuX } from "react-icons/lu";
+import { LuX, LuCopy, LuCheck, LuUserPlus } from "react-icons/lu";
+import axios from "axios";
 
-const NewEmployeeModal = ({ isOpen, onClose }) => {
+const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -16,6 +17,11 @@ const NewEmployeeModal = ({ isOpen, onClose }) => {
     rol: "Colaborador",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [generatedPassword, setGeneratedPassword] = useState(""); // Guarda la clave temporal recibida
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -23,229 +29,350 @@ const NewEmployeeModal = ({ isOpen, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(generatedPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCloseAndReset = () => {
+    setGeneratedPassword("");
+    setError("");
+    setFormData({
+      name: "",
+      phone: "",
+      email: "",
+      birth: "",
+      gender: "M",
+      address: "",
+      job_position: "",
+      emergency_contact_name: "",
+      emergency_contact_phone: "",
+      medical_insurance_number: "",
+      rol: "Colaborador",
+    });
+    onClose();
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Estructura en Tailwind lista para enviar:", formData);
+    setLoading(true);
+    setError("");
+
+    // Traducimos el formato de snake_case del frontend al camelCase del backend
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      gender: formData.gender,
+      role: formData.rol,
+      password: "", // Detona la autogeneración segura en el controlador
+      birth: formData.birth || null,
+      address: formData.address || null,
+      jobPosition: formData.job_position || null,
+      emergencyContactName: formData.emergency_contact_name || null,
+      emergencyContactPhone: formData.emergency_contact_phone || null,
+      medicalInsuranceNumber: formData.medical_insurance_number || null,
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/register",
+        payload,
+        {
+          withCredentials: true,
+        },
+      );
+
+      if (response.status === 201) {
+        setGeneratedPassword(response.data.temporaryPassword);
+        if (onRefresh) onRefresh(); // Sincroniza la tabla del fondo automáticamente
+      }
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message ||
+          "Error interno al registrar colaborador.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-[650px] max-h-[90vh] rounded-2xl p-6 shadow-2xl overflow-y-auto custom-scrollbar">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-1">
-          <h2 className="text-xl font-bold text-primary m-0">
-            Registrar Nuevo Colaborador
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-accent hover:text-secondary transition-colors cursor-pointer"
-          >
-            <LuX size={22} />
-          </button>
-        </div>
-
-        <p className="text-xs text-accent text-left mb-4">
-          Completa el expediente del colaborador. Se enviará un correo con su
-          acceso temporal automáticamente.
-        </p>
-
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
-          {/* SECCIÓN 1: DATOS PERSONALES */}
-          <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-1">
-            Datos Personales
-          </h3>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-primary">
-              Nombre Completo *
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Ej. Karelia Juárez"
-              className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Correo Electrónico *
-              </label>
-              <input
-                type="email"
-                name="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="correo@depilclinik.com"
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
+        {/* VISTA 1: ÉXITO - MOSTRAR CONTRASEÑA GENERADA */}
+        {generatedPassword ? (
+          <div className="flex flex-col items-center py-6 text-center">
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mb-4">
+              <LuUserPlus size={32} />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Teléfono *
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                required
-                maxLength="10"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="6181234567"
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
-            </div>
-          </div>
+            <h2 className="text-xl font-bold text-primary mb-1">
+              ¡Registro Exitoso!
+            </h2>
+            <p className="text-xs text-accent max-w-sm mb-6">
+              El expediente de <strong>{formData.name}</strong> se ha guardado.
+              Copia la siguiente contraseña temporal para que pueda realizar su
+              primer inicio de sesión.
+            </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">Género *</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full p-2.5 rounded-lg border border-borderClinik bg-white focus:outline-none focus:border-secondary"
+            <div className="w-full max-w-xs bg-gray-50 border border-borderClinik rounded-xl p-4 flex items-center justify-between mb-8">
+              <span className="font-mono text-lg font-bold tracking-wider text-primary select-all">
+                {generatedPassword}
+              </span>
+              <button
+                onClick={handleCopyPassword}
+                className="p-2 text-secondary hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                title="Copiar contraseña"
               >
-                <option value="M">Mujer</option>
-                <option value="H">Hombre</option>
-                <option value="ND">No Definido</option>
-              </select>
+                {copied ? (
+                  <LuCheck size={20} className="text-emerald-500" />
+                ) : (
+                  <LuCopy size={20} />
+                )}
+              </button>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Fecha de Nacimiento
-              </label>
-              <input
-                type="date"
-                name="birth"
-                value={formData.birth}
-                onChange={handleChange}
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-primary">
-              Dirección Particular
-            </label>
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Calle, Número, Colonia..."
-              rows="2"
-              className="w-full p-2.5 rounded-lg border border-borderClinik resize-none focus:outline-none focus:border-secondary"
-            />
-          </div>
-
-          {/* SECCIÓN 2: PUESTO Y SEGURO */}
-          <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
-            Información Laboral
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Puesto de Trabajo
-              </label>
-              <input
-                type="text"
-                name="job_position"
-                value={formData.job_position}
-                onChange={handleChange}
-                placeholder="Ej. Especialista Láser"
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Rol de Sistema *
-              </label>
-              <select
-                name="rol"
-                value={formData.rol}
-                onChange={handleChange}
-                className="w-full p-2.5 rounded-lg border border-borderClinik bg-white focus:outline-none focus:border-secondary"
-              >
-                <option value="Colaborador">Colaborador</option>
-                <option value="Administrador">Administrador</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-primary">
-              Número de Seguro Médico (Único)
-            </label>
-            <input
-              type="text"
-              name="medical_insurance_number"
-              value={formData.medical_insurance_number}
-              onChange={handleChange}
-              placeholder="NSS de 11 dígitos"
-              className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-            />
-          </div>
-
-          {/* SECCIÓN 3: CONTACTO DE EMERGENCIA */}
-          <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
-            Contacto de Emergencia
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="flex flex-col gap-1 md:col-span-2">
-              <label className="text-xs font-bold text-primary">
-                Nombre del Contacto
-              </label>
-              <input
-                type="text"
-                name="emergency_contact_name"
-                value={formData.emergency_contact_name}
-                onChange={handleChange}
-                placeholder="Ej. Mamá o Cónyuge"
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Teléfono Contacto
-              </label>
-              <input
-                type="tel"
-                name="emergency_contact_phone"
-                maxLength="10"
-                value={formData.emergency_contact_phone}
-                onChange={handleChange}
-                placeholder="10 dígitos"
-                className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
-              />
-            </div>
-          </div>
-
-          {/* Botones de Acción */}
-          <div className="flex justify-end gap-3 mt-3">
             <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2 rounded-full border border-borderClinik text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={handleCloseAndReset}
+              className="px-8 py-2.5 rounded-full bg-secondary text-xs font-semibold text-white hover:bg-[#14676f] transition-colors cursor-pointer shadow-sm w-full max-w-xs"
             >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 rounded-full bg-secondary text-xs font-semibold text-white hover:bg-[#14676f] transition-colors cursor-pointer shadow-sm"
-            >
-              Enviar Invitación
+              Listo, Cerrar Ventana
             </button>
           </div>
-        </form>
+        ) : (
+          /* VISTA 2: FORMULARIO DE CAPTURA ORIGINAL */
+          <>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-xl font-bold text-primary m-0">
+                Registrar Nuevo Colaborador
+              </h2>
+              <button
+                onClick={handleCloseAndReset}
+                className="text-accent hover:text-secondary transition-colors cursor-pointer"
+              >
+                <LuX size={22} />
+              </button>
+            </div>
+
+            <p className="text-xs text-accent text-left mb-4">
+              Completa el expediente del colaborador. Se generará un acceso
+              temporal de forma automática.
+            </p>
+
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 text-left font-medium mb-2">
+                {error}
+              </div>
+            )}
+
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4 text-left"
+            >
+              {/* SECCIÓN 1: DATOS PERSONALES */}
+              <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-1">
+                Datos Personales
+              </h3>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-primary">
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Ej. Karelia Juárez"
+                  className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Correo Electrónico *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="correo@depilclinik.com"
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Teléfono *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    maxLength="10"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="6181234567"
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Género *
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="w-full p-2.5 rounded-lg border border-borderClinik bg-white focus:outline-none focus:border-secondary"
+                  >
+                    <option value="M">Mujer</option>
+                    <option value="H">Hombre</option>
+                    <option value="ND">No Definido</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Fecha de Nacimiento
+                  </label>
+                  <input
+                    type="date"
+                    name="birth"
+                    value={formData.birth}
+                    onChange={handleChange}
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-primary">
+                  Dirección Particular
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Calle, Número, Colonia..."
+                  rows="2"
+                  className="w-full p-2.5 rounded-lg border border-borderClinik resize-none focus:outline-none focus:border-secondary"
+                />
+              </div>
+
+              {/* SECCIÓN 2: PUESTO Y SEGURO */}
+              <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
+                Información Laboral
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Puesto de Trabajo
+                  </label>
+                  <input
+                    type="text"
+                    name="job_position"
+                    value={formData.job_position}
+                    onChange={handleChange}
+                    placeholder="Ej. Especialista Láser"
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Rol de Sistema *
+                  </label>
+                  <select
+                    name="rol"
+                    value={formData.rol}
+                    onChange={handleChange}
+                    className="w-full p-2.5 rounded-lg border border-borderClinik bg-white focus:outline-none focus:border-secondary"
+                  >
+                    <option value="Colaborador">Colaborador</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-primary">
+                  Número de Seguro Médico (Único)
+                </label>
+                <input
+                  type="text"
+                  name="medical_insurance_number"
+                  value={formData.medical_insurance_number}
+                  onChange={handleChange}
+                  placeholder="NSS de 11 dígitos"
+                  className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                />
+              </div>
+
+              {/* SECCIÓN 3: CONTACTO DE EMERGENCIA */}
+              <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
+                Contacto de Emergencia
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1 md:col-span-2">
+                  <label className="text-xs font-bold text-primary">
+                    Nombre del Contacto
+                  </label>
+                  <input
+                    type="text"
+                    name="emergency_contact_name"
+                    value={formData.emergency_contact_name}
+                    onChange={handleChange}
+                    placeholder="Ej. Mamá o Cónyuge"
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-primary">
+                    Teléfono Contacto
+                  </label>
+                  <input
+                    type="tel"
+                    name="emergency_contact_phone"
+                    maxLength="10"
+                    value={formData.emergency_contact_phone}
+                    onChange={handleChange}
+                    placeholder="10 dígitos"
+                    className="w-full p-2.5 rounded-lg border border-borderClinik focus:outline-none focus:border-secondary"
+                  />
+                </div>
+              </div>
+
+              {/* Botones de Acción */}
+              <div className="flex justify-end gap-3 mt-3">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleCloseAndReset}
+                  className="px-5 py-2 rounded-full border border-borderClinik text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2 rounded-full bg-secondary text-xs font-semibold text-white hover:bg-[#14676f] transition-colors cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-1"
+                >
+                  {loading ? "Registrando..." : "Enviar Invitación"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
