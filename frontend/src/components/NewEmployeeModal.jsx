@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { LuX, LuCopy, LuCheck, LuUserPlus } from "react-icons/lu";
-import axios from "axios";
+import api from "../services/api";
 
 const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -76,13 +76,7 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        payload,
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await api.post("/auth/register", payload);
 
       if (response.status === 201) {
         setGeneratedPassword(response.data.temporaryPassword);

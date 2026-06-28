@@ -64,7 +64,7 @@ const Customer = sequelize.define(
       field: "is_active",
     },
     createdAt: {
-      type: DataTypes.STRING,
+      type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
       field: "created_at",
@@ -72,7 +72,9 @@ const Customer = sequelize.define(
   },
   {
     tableName: "Customers",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
   },
 );
 

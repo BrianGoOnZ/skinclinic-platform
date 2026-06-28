@@ -58,10 +58,17 @@ async function startServer() {
 
   // Sincroniza y crea las tablas que hagan falta en el expediente clínico
   try {
-    await sequelize.sync({ alter: true });
-    console.log(
-      "¡Tablas del expediente clínico sincronizadas y actualizadas en MySQL!",
-    );
+    if (process.env.NODE_ENV === "production") {
+      await sequelize.sync();
+      console.log(
+        "Servidor en producción: sincronización de Sequelize completada sin alteraciones.",
+      );
+    } else {
+      await sequelize.sync({ alter: true });
+      console.log(
+        "¡Tablas del expediente clínico sincronizadas y actualizadas en MySQL!",
+      );
+    }
   } catch (error) {
     console.error("Error crítico al sincronizar modelos con Sequelize:", error);
   }
