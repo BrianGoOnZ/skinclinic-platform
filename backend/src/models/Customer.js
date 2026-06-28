@@ -21,16 +21,16 @@ const Customer = sequelize.define(
     },
     email: {
       type: DataTypes.STRING(100),
-      allowNull: true, // VARCHAR(100) UNIQUE NULL
+      allowNull: true,
       unique: true,
     },
     birthdate: {
-      type: DataTypes.DATEONLY, // birth DATE NOT NULL
+      type: DataTypes.DATEONLY,
       allowNull: false,
       field: "birth",
     },
     gender: {
-      type: DataTypes.ENUM("H", "M", "ND"), // ENUM('H', 'M', 'ND') NOT NULL
+      type: DataTypes.ENUM("H", "M", "ND"),
       allowNull: false,
     },
     address: {
@@ -63,10 +63,16 @@ const Customer = sequelize.define(
       defaultValue: true,
       field: "is_active",
     },
+    createdAt: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: "created_at",
+    },
   },
   {
-    tableName: "Customers", // Nombre exacto de tu tabla SQL
-    timestamps: false, // Tu SQL solo tiene created_at manual, desactivamos timestamps automáticos de Sequelize
+    tableName: "Customers",
+    timestamps: false,
   },
 );
 

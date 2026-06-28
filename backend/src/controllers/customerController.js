@@ -1,6 +1,5 @@
 import Customer from "../models/Customer.js";
 
-// 1. Registrar un cliente nuevo (Sincronizado con tus columnas)
 export const createCustomer = async (req, res) => {
   try {
     const {
@@ -16,7 +15,6 @@ export const createCustomer = async (req, res) => {
       medicalInsuranceNumber,
     } = req.body;
 
-    // Verificar si el teléfono ya existe (Es UNIQUE en tu SQL)
     const phoneExists = await Customer.findOne({ where: { phone } });
     if (phoneExists) {
       return res
@@ -24,7 +22,6 @@ export const createCustomer = async (req, res) => {
         .json({ message: "A customer with this phone number already exists" });
     }
 
-    // Verificar el correo si lo proporcionaron (Es UNIQUE NULL en tu SQL)
     if (email) {
       const emailExists = await Customer.findOne({ where: { email } });
       if (emailExists) {
@@ -34,12 +31,11 @@ export const createCustomer = async (req, res) => {
       }
     }
 
-    // Crear el registro con todos los datos mapeados
     const newCustomer = await Customer.create({
       name,
       phone,
       email,
-      birthdate, // Se guardará en la columna 'birth'
+      birthdate,
       gender,
       address,
       occupation,
@@ -48,9 +44,12 @@ export const createCustomer = async (req, res) => {
       medicalInsuranceNumber,
     });
 
+    const customerData = newCustomer.toJSON();
+
     res.status(201).json({
-      message: "Customer registered successfully",
-      customer: newCustomer,
+      ...customerData,
+      createdAt:
+        customerData.createdAt || customerData.created_at || new Date(),
     });
   } catch (error) {
     res.status(500).json({
@@ -60,10 +59,12 @@ export const createCustomer = async (req, res) => {
   }
 };
 
-// 2. Obtener todos los clientes activos
 export const getAllCustomers = async (req, res) => {
   try {
-    const customers = await Customer.findAll({ where: { isActive: true } });
+    const customers = await Customer.findAll({
+      where: { isActive: true },
+      order: [["customer_id", "DESC"]],
+    });
     res.status(200).json(customers);
   } catch (error) {
     res.status(500).json({
@@ -73,11 +74,9 @@ export const getAllCustomers = async (req, res) => {
   }
 };
 
-// 3. Obtener un solo cliente por su ID (Reemplaza la que tienes por esta)
 export const getCustomerById = async (req, res) => {
   try {
     const { id } = req.params;
-    // Buscamos directamente por su Llave Primaria (ID) sin importar si está activo o no
     const customer = await Customer.findByPk(id);
 
     if (!customer) {
@@ -93,7 +92,6 @@ export const getCustomerById = async (req, res) => {
   }
 };
 
-// 4. Actualizar los datos de un cliente
 export const updateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -103,13 +101,9 @@ export const updateCustomer = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Actualizamos el registro con los datos que vengan en el body
     await customer.update(req.body);
 
-    res.status(200).json({
-      message: "Customer updated successfully",
-      customer,
-    });
+    res.status(200).json(customer);
   } catch (error) {
     res.status(500).json({
       message: "Server error while updating customer",
@@ -118,7 +112,6 @@ export const updateCustomer = async (req, res) => {
   }
 };
 
-// 5. Baja Lógica (Cambiar isActive a false)
 export const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -128,7 +121,6 @@ export const deleteCustomer = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // En lugar de destroy(), apagamos el switch de isActive
     await customer.update({ isActive: false });
 
     res.status(200).json({
@@ -142,7 +134,6 @@ export const deleteCustomer = async (req, res) => {
   }
 };
 
-// 6. Reactivar un cliente (Baja Lógica Inversa)
 export const reactivateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,13 +147,9 @@ export const reactivateCustomer = async (req, res) => {
       return res.status(400).json({ message: "Customer is already active" });
     }
 
-    // Volvemos a encender el switch
     await customer.update({ isActive: true });
 
-    res.status(200).json({
-      message: "Customer reactivated successfully",
-      customer,
-    });
+    res.status(200).json(customer);
   } catch (error) {
     res.status(500).json({
       message: "Server error while reactivating customer",

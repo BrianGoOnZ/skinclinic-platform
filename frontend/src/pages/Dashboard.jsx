@@ -2,14 +2,29 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Employees from "./Employees";
+import CustomersPage from "./CustomersPage";
+import AddCustomerModal from "../components/AddCustomerModal";
 
 const DashboardPage = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState("dashboard");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefreshCustomers = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   const renderContent = () => {
     switch (activeView) {
       case "empleados":
         return <Employees />;
+      case "clientes":
+        return (
+          <CustomersPage
+            key={refreshKey}
+            onOpenAddModal={() => setIsModalOpen(true)}
+          />
+        );
       case "dashboard":
         return (
           <div className="flex flex-col gap-6 w-full text-left">
@@ -212,6 +227,12 @@ const DashboardPage = ({ user, onLogout }) => {
           {renderContent()}
         </main>
       </div>
+
+      <AddCustomerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onRefresh={handleRefreshCustomers}
+      />
     </div>
   );
 };
