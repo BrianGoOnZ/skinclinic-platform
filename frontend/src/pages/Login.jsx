@@ -11,6 +11,11 @@ const LoginSPA = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
+  const [mustChangePass, setMustChangePass] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passError, setPassError] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -18,22 +23,118 @@ const LoginSPA = () => {
     try {
       const response = await api.post("/auth/login", { email, password });
       console.log("¡Login exitoso!", response.data);
-      setUser(response.data.user);
-      setIsLoggedIn(true);
+
+      const loggedUser = response.data.user;
+      setUser(loggedUser);
+
+      if (loggedUser.mustChangePassword) {
+        setMustChangePass(true);
+      } else {
+        setIsLoggedIn(true);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Credenciales incorrectas");
     }
   };
 
-  // Renderizado condicional para el modelo SPA
+  const handlePasswordChangeSubmit = async (e) => {
+    e.preventDefault();
+    setPassError("");
+
+    if (newPassword !== confirmPassword) {
+      setPassError("Las contraseñas no coinciden");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPassError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    try {
+      await api.post("/auth/change-password", {
+        userId: user.user_id,
+        newPassword,
+      });
+
+      console.log("Contraseña actualizada con éxito");
+      setMustChangePass(false);
+      setIsLoggedIn(true);
+    } catch (err) {
+      setPassError(
+        err.response?.data?.message || "Error al actualizar la contraseña",
+      );
+    }
+  };
+
   if (isLoggedIn) {
     return <DashboardPage user={user} onLogout={() => setIsLoggedIn(false)} />;
   }
 
+  if (mustChangePass) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
+        <div className="bg-white w-full max-w-[450px] rounded-2xl p-8 shadow-2xl text-left">
+          <h1 className="text-2xl font-bold text-primary mb-2 text-center">
+            Actualizar Contraseña
+          </h1>
+          <p className="text-sm text-accent mb-6 text-center">
+            Por seguridad, debes cambiar tu contraseña temporal antes de
+            continuar.
+          </p>
+
+          {passError && (
+            <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
+              {passError}
+            </p>
+          )}
+
+          <form
+            onSubmit={handlePasswordChangeSubmit}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-primary">
+                Nueva Contraseña
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-primary">
+                Confirmar Contraseña
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-2 p-2.5 rounded-lg bg-secondary text-white text-sm font-bold hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
+            >
+              Guardar y Acceder
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    // Contenedor principal centrado con fondo oscuro corporativo
     <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
-      {/* Tarjeta de Login blanca */}
       <div className="bg-white w-full max-w-[450px] rounded-2xl p-8 shadow-2xl text-left">
         <h1 className="text-2xl font-bold text-primary mb-1 text-center">
           Iniciar Sesión
@@ -42,14 +143,12 @@ const LoginSPA = () => {
           Ingresa tus credenciales para acceder
         </p>
 
-        {/* Alerta de Error estilizada */}
         {error && (
           <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
             {error}
           </p>
         )}
 
-        {/* Botón de Google */}
         <button
           type="button"
           className="w-full flex items-center justify-center gap-3 p-2.5 border border-borderClinik rounded-lg text-sm font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer mb-5"
@@ -75,14 +174,12 @@ const LoginSPA = () => {
           Ingresar con Google
         </button>
 
-        {/* Separador "ó" */}
         <div className="flex items-center my-5">
           <div className="flex-1 border-t border-gray-200"></div>
           <span className="px-3 text-xs text-accent font-medium">ó</span>
           <div className="flex-1 border-t border-gray-200"></div>
         </div>
 
-        {/* Formulario de Login */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-primary">
@@ -110,7 +207,6 @@ const LoginSPA = () => {
             />
           </div>
 
-          {/* Fila de opciones adicionales */}
           <div className="flex items-center justify-between text-xs mt-1">
             <label className="flex items-center gap-2 text-primary font-medium cursor-pointer select-none">
               <input

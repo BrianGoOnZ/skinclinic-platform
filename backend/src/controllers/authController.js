@@ -145,3 +145,46 @@ export const getAllUsers = async (req, res) => {
     });
   }
 };
+
+// Actualizar la contraseña temporal por la definitiva (Primer Login)
+export const changePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    // El middleware 'protect' inyecta al usuario autenticado en req.user
+    // Revisando tu login, el ID se almacena directamente en user.id
+    const userId = req.user?.id;
+
+    if (!newPassword) {
+      return res
+        .status(400)
+        .json({ message: "La nueva contraseña es requerida" });
+    }
+
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "La contraseña debe tener al menos 6 caracteres" });
+    }
+
+    // Buscamos al usuario por su ID
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Actualizamos la contraseña (aquí el modelo User se encargará de pasarla por bcrypt automáticamente si tienes el hook seteado en tu modelo)
+    user.password = newPassword;
+    user.mustChangePassword = false; // Desactivamos el bloqueo
+
+    await user.save();
+
+    res.status(200).json({ message: "Contraseña actualizada con éxito" });
+  } catch (error) {
+    console.error("Error en changePassword:", error);
+    res.status(500).json({
+      message: "Error interno del servidor al actualizar la contraseña",
+      error: error.message,
+    });
+  }
+};

@@ -10,40 +10,38 @@ dotenv.config();
 
 const app = express();
 
-// Configuración de CORS con credenciales para tu React
+// Configuración de CORS para conectar con el Frontend de Vite
 app.use(
   cors({
-    origin: "http://localhost:5173", // El puerto por defecto de Vite
-    credentials: true, // Permite que las cookies HTTPOnly viajen entre puertos
+    origin: "http://localhost:5173",
+    credentials: true, // Permite el intercambio de cookies HTTPOnly
   }),
 );
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Vincula las rutas aquí abajo de los middlewares globales
+// Endpoints del sistema
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// Estrategia de re-intento de conexión (Resiliencia de Infraestructura)
+// Bucle para esperar a que el contenedor de MySQL esté listo
 async function connectWithRetry(retries = 5, delay = 5000) {
   while (retries > 0) {
     try {
       await sequelize.authenticate();
-      console.log(
-        "Connection to Docker MySQL has been established successfully via Sequelize.",
-      );
+      console.log("¡Conexión exitosa con el MySQL de Docker!");
       return;
     } catch (error) {
       retries--;
       console.log(
-        `Database not ready yet. Retrying in ${delay / 1000}s... (${retries} retries left)`,
+        `La base de datos aún no responde. Reintentando en ${delay / 1000}s... (Quedan ${retries} intentos)`,
       );
       if (retries === 0) {
         console.error(
-          "Max connection retries reached. Unable to connect to the database:",
+          "Se agotaron los intentos de conexión. No se pudo conectar a la base de datos:",
           error,
         );
         process.exit(1);
@@ -53,11 +51,24 @@ async function connectWithRetry(retries = 5, delay = 5000) {
   }
 }
 
+// Inicialización del servidor backend
 async function startServer() {
+  // Asegura la conexión a MySQL primero
   await connectWithRetry();
 
+  // Sincroniza y crea las tablas que hagan falta en el expediente clínico
+  try {
+    await sequelize.sync({ alter: true });
+    console.log(
+      "¡Tablas del expediente clínico sincronizadas y actualizadas en MySQL!",
+    );
+  } catch (error) {
+    console.error("Error crítico al sincronizar modelos con Sequelize:", error);
+  }
+
+  // Enciende la escucha de Express
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Servidor backend corriendo en: http://localhost:${PORT}`);
   });
 }
 

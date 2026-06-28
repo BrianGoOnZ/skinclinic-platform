@@ -1,5 +1,10 @@
 import express from "express";
-import { register, login, getAllUsers } from "../controllers/authController.js";
+import {
+  register,
+  login,
+  getAllUsers,
+  changePassword,
+} from "../controllers/authController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 
 const router = express.Router();
@@ -24,5 +29,8 @@ router.get("/admin-only", protect, restrictTo("Administrador"), (req, res) => {
     message: "Access granted. Welcome to the admin panel!",
   });
 });
+
+// Ruta para actualizar la contraseña temporal en el primer ingreso (Limpia y protegida)
+router.post("/change-password", protect, changePassword);
 
 export default router;
