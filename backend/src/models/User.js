@@ -75,6 +75,12 @@ const User = sequelize.define(
       defaultValue: true,
       field: "is_active", // Mapea a 'is_active' para la baja lógica
     },
+    mustChangePassword: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: "must_change_password", // Mapea al nuevo campo de la BD
+    },
   },
   {
     tableName: "Users", // Nota la 'U' mayúscula como en tu SQL

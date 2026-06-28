@@ -1,14 +1,26 @@
+import crypto from "crypto";
 import User from "../models/User.js";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../middlewares/auth.js";
 
-// 1. Registro de Usuarios (Sincronizado con las columnas de tu SQL)
+// Registro de Usuarios (Expediente completo + Contraseña Temporal)
 export const register = async (req, res) => {
   try {
-    // Extraemos TODAS las variables obligatorias que mandas desde Postman
-    const { name, email, password, phone, gender, role } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      gender,
+      role,
+      birth,
+      address,
+      jobPosition,
+      emergencyContactName,
+      emergencyContactPhone,
+      medicalInsuranceNumber,
+    } = req.body;
 
     // Verificar si el correo ya existe
     const userExists = await User.findOne({ where: { email } });
@@ -16,23 +28,37 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Pasamos todas las variables requeridas a Sequelize
+    // GENERACIÓN DE CONTRASEÑA TEMPORAL
+    const temporaryPassword = crypto.randomBytes(5).toString("hex");
+
+    // Pasamos todas las variables requeridas y opcionales a Sequelize
     const newUser = await User.create({
       name,
       email,
-      password,
+      password: temporaryPassword,
       phone,
       gender,
       role,
+      birth,
+      address,
+      jobPosition,
+      emergencyContactName,
+      emergencyContactPhone,
+      medicalInsuranceNumber,
+      mustChangePassword: true, // Forzamos que sea true, aunque ya es su default
     });
 
+    // IMPORTANTE: Devolvemos la contraseña temporal en la respuesta
+    // Solo se verá esta vez en pantalla para que el administrador se la dé al colaborador
     res.status(201).json({
       message: "User registered successfully",
+      temporaryPassword, // <--- ¡Ojo aquí para copiarla en Postman!
       user: {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        mustChangePassword: newUser.mustChangePassword,
       },
     });
   } catch (error) {
@@ -48,7 +74,7 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Buscamos validando que la cuenta esté activa (is_active mapeado como isActive)
+    // Buscamos validando que la cuenta esté activa
     const user = await User.findOne({ where: { email, isActive: true } });
     if (!user) {
       return res
@@ -77,9 +103,15 @@ export const login = async (req, res) => {
     });
     res.cookie("refreshToken", refreshToken, cookieOptions);
 
+    // Agregamos mustChangePassword a la respuesta del login para que el Frontend sepa si desviarlo o no
     res.status(200).json({
       message: "Login successful",
-      user: { id: user.id, name: user.name, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
     });
   } catch (error) {
     res
@@ -91,9 +123,16 @@ export const login = async (req, res) => {
 // Obtener todos los colaboradores para la pantalla del Frontend
 export const getAllUsers = async (req, res) => {
   try {
-    // Usamos los campos idénticos a las columnas reales de tu CREATE TABLE Users
     const usuarios = await User.findAll({
-      attributes: ["user_id", "name", "email", "rol", "is_active"],
+      attributes: [
+        ["user_id", "user_id"],
+        "name",
+        "email",
+        ["rol", "rol"],
+        ["is_active", "is_active"],
+        ["job_position", "jobPosition"],
+        ["must_change_password", "mustChangePassword"],
+      ],
       order: [["name", "ASC"]],
     });
 
@@ -102,6 +141,7 @@ export const getAllUsers = async (req, res) => {
     console.error("Error al consultar usuarios en MySQL:", error);
     return res.status(500).json({
       message: "Error interno del servidor al obtener colaboradores",
+      error: error.message,
     });
   }
 };
