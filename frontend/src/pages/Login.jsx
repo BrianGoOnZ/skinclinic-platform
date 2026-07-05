@@ -1,14 +1,12 @@
 import { useState } from "react";
 import api from "../services/api";
-import DashboardPage from "./Dashboard";
 
-const LoginSPA = () => {
+const LoginSPA = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
   const [mustChangePass, setMustChangePass] = useState(false);
@@ -30,7 +28,7 @@ const LoginSPA = () => {
       if (loggedUser.mustChangePassword) {
         setMustChangePass(true);
       } else {
-        setIsLoggedIn(true);
+        onLoginSuccess(loggedUser);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Credenciales incorrectas");
@@ -52,10 +50,10 @@ const LoginSPA = () => {
     }
 
     try {
-      await api.post("/auth/change-password", {
-        userId: user.user_id,
-        newPassword,
-      });
+      await api.post("/auth/change-password", { newPassword });
+
+      setMustChangePass(false);
+      onLoginSuccess({ ...user, mustChangePassword: false });
 
       console.log("Contraseña actualizada con éxito");
       setMustChangePass(false);
@@ -66,10 +64,6 @@ const LoginSPA = () => {
       );
     }
   };
-
-  if (isLoggedIn) {
-    return <DashboardPage user={user} onLogout={() => setIsLoggedIn(false)} />;
-  }
 
   if (mustChangePass) {
     return (

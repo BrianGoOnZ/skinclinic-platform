@@ -4,6 +4,8 @@ import {
   login,
   getAllUsers,
   changePassword,
+  getMe,
+  logout,
 } from "../controllers/authController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 
@@ -13,6 +15,8 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/login", login);
 router.get("/usuarios", protect, getAllUsers);
+router.get("/me", protect, getMe);
+router.post("/logout", protect, logout);
 
 // ENDPOINTS DE PRUEBA DE SEGURIDAD (Rutas Protegidas)
 

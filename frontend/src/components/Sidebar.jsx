@@ -10,7 +10,7 @@ import {
   LuLogOut,
 } from "react-icons/lu";
 
-const Sidebar = ({ activeView, setActiveView, onLogout }) => {
+const Sidebar = ({ activeView, setActiveView, onLogout, userRole }) => {
   const menuItems = [
     {
       id: "dashboard",
@@ -21,8 +21,17 @@ const Sidebar = ({ activeView, setActiveView, onLogout }) => {
     { id: "agenda", label: "Agenda", icon: <LuCalendarDays size={20} /> },
     { id: "clientes", label: "Clientes", icon: <LuUser size={20} /> },
     { id: "empleados", label: "Empleados", icon: <LuUsers size={20} /> },
-    { id: "ingresos", label: "Ingresos", icon: <LuCreditCard size={20} /> },
+    {
+      id: "ingresos",
+      label: "Ingresos",
+      icon: <LuCreditCard size={20} />,
+      adminOnly: true,
+    },
   ];
+
+  const visibleItems = menuItems.filter(
+    (item) => !item.adminOnly || userRole === "Administrador",
+  );
 
   return (
     <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0">
@@ -33,7 +42,7 @@ const Sidebar = ({ activeView, setActiveView, onLogout }) => {
       </div>
 
       <nav className="flex-1 px-4 py-2 flex flex-col gap-1">
-        {menuItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = activeView === item.id;
           return (
             <div
