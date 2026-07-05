@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import {
-  LuSearch,
-  LuPlus,
-  LuPencil,
-  LuTrash2,
-  LuRefreshCw,
-} from "react-icons/lu";
+import { LuSearch, LuPlus, LuPencil, LuRefreshCw } from "react-icons/lu";
 import NewEmployeeModal from "../components/NewEmployeeModal";
 
-const Employees = () => {
+const Employees = ({ currentUserRole }) => {
   const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
+
+  const isAdmin = currentUserRole === "Administrador";
 
   const fetchEmployees = async () => {
     try {
@@ -42,6 +40,37 @@ const Employees = () => {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleOpenEdit = async (userId) => {
+    try {
+      const response = await api.get(`/auth/usuarios/${userId}`);
+      setEditingEmployee(response.data);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleOpenCreate = () => {
+    setEditingEmployee(null);
+    setIsModalOpen(true);
+  };
+
+  const handleToggleActive = async (emp) => {
+    setTogglingId(emp.user_id);
+    try {
+      if (emp.is_active) {
+        await api.patch(`/auth/usuarios/${emp.user_id}/delete`);
+      } else {
+        await api.patch(`/auth/usuarios/${emp.user_id}/reactivate`);
+      }
+      await fetchEmployees();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const filteredEmployees = employees.filter(
@@ -79,12 +108,14 @@ const Employees = () => {
           />
         </div>
 
-        <button
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <LuPlus size={14} /> Nuevo Colaborador
-        </button>
+        {isAdmin && (
+          <button
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
+            onClick={handleOpenCreate}
+          >
+            <LuPlus size={14} /> Nuevo Colaborador
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -111,9 +142,11 @@ const Employees = () => {
                   <th className="p-4 text-xs font-bold text-primary w-[35%]">
                     Rol
                   </th>
-                  <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
-                    Acciones
-                  </th>
+                  {isAdmin && (
+                    <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
+                      Acciones
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -149,16 +182,35 @@ const Employees = () => {
                         {emp.rol}
                       </span>
                     </td>
-                    <td className="p-4 text-right vertical-middle">
-                      <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer">
-                          <LuPencil size={16} />
-                        </button>
-                        <button className="p-1.5 text-accent hover:text-red-600 transition-colors cursor-pointer">
-                          <LuTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="p-4 text-right vertical-middle">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => handleOpenEdit(emp.user_id)}
+                            className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <LuPencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(emp)}
+                            disabled={togglingId === emp.user_id}
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
+                              emp.is_active ? "bg-secondary" : "bg-gray-300"
+                            }`}
+                            title={emp.is_active ? "Desactivar" : "Activar"}
+                          >
+                            <span
+                              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                                emp.is_active
+                                  ? "translate-x-5"
+                                  : "translate-x-0"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -171,6 +223,7 @@ const Employees = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onRefresh={fetchEmployees}
+        employee={editingEmployee}
       />
     </div>
   );

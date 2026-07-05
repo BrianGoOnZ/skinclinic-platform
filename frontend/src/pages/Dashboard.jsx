@@ -17,7 +17,14 @@ const DashboardPage = ({ user, onLogout }) => {
   const renderContent = () => {
     switch (activeView) {
       case "empleados":
-        return <Employees />;
+        if (user?.role !== "Administrador") {
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+              No tienes permisos para acceder a esta sección.
+            </div>
+          );
+        }
+        return <Employees currentUserRole={user?.role} />;
       case "clientes":
         return (
           <CustomersPage

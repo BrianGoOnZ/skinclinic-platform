@@ -1,26 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LuX, LuCopy, LuCheck, LuUserPlus } from "react-icons/lu";
 import api from "../services/api";
 
-const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    birth: "",
-    gender: "M",
-    address: "",
-    job_position: "",
-    emergency_contact_name: "",
-    emergency_contact_phone: "",
-    medical_insurance_number: "",
-    rol: "Colaborador",
-  });
+const emptyFormState = {
+  name: "",
+  phone: "",
+  email: "",
+  birth: "",
+  gender: "M",
+  address: "",
+  job_position: "",
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
+  medical_insurance_number: "",
+  rol: "Colaborador",
+};
 
+const NewEmployeeModal = ({ isOpen, onClose, onRefresh, employee }) => {
+  const isEditMode = Boolean(employee);
+
+  const [formData, setFormData] = useState(emptyFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [generatedPassword, setGeneratedPassword] = useState(""); // Guarda la clave temporal recibida
+  const [generatedPassword, setGeneratedPassword] = useState("");
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setError("");
+      setGeneratedPassword("");
+      if (isEditMode) {
+        setFormData({
+          name: employee.name || "",
+          phone: employee.phone || "",
+          email: employee.email || "",
+          birth: employee.birth ? employee.birth.slice(0, 10) : "",
+          gender: employee.gender || "M",
+          address: employee.address || "",
+          job_position: employee.jobPosition || "",
+          emergency_contact_name: employee.emergencyContactName || "",
+          emergency_contact_phone: employee.emergencyContactPhone || "",
+          medical_insurance_number: employee.medicalInsuranceNumber || "",
+          rol: employee.role || "Colaborador",
+        });
+      } else {
+        setFormData(emptyFormState);
+      }
+    }
+  }, [isOpen, employee]);
 
   if (!isOpen) return null;
 
@@ -38,19 +65,7 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
   const handleCloseAndReset = () => {
     setGeneratedPassword("");
     setError("");
-    setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      birth: "",
-      gender: "M",
-      address: "",
-      job_position: "",
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-      medical_insurance_number: "",
-      rol: "Colaborador",
-    });
+    setFormData(emptyFormState);
     onClose();
   };
 
@@ -59,14 +74,12 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
     setLoading(true);
     setError("");
 
-    // Traducimos el formato de snake_case del frontend al camelCase del backend
     const payload = {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
       gender: formData.gender,
       role: formData.rol,
-      password: "", // Detona la autogeneración segura en el controlador
       birth: formData.birth || null,
       address: formData.address || null,
       jobPosition: formData.job_position || null,
@@ -76,17 +89,26 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
     };
 
     try {
-      const response = await api.post("/auth/register", payload);
+      if (isEditMode) {
+        await api.put(`/auth/usuarios/${employee.user_id}`, payload);
+        if (onRefresh) onRefresh();
+        handleCloseAndReset();
+      } else {
+        const response = await api.post("/auth/register", {
+          ...payload,
+          password: "",
+        });
 
-      if (response.status === 201) {
-        setGeneratedPassword(response.data.temporaryPassword);
-        if (onRefresh) onRefresh(); // Sincroniza la tabla del fondo automáticamente
+        if (response.status === 201) {
+          setGeneratedPassword(response.data.temporaryPassword);
+          if (onRefresh) onRefresh();
+        }
       }
     } catch (err) {
       console.error(err);
       setError(
         err.response?.data?.message ||
-          "Error interno al registrar colaborador.",
+          `Error interno al ${isEditMode ? "actualizar" : "registrar"} colaborador.`,
       );
     } finally {
       setLoading(false);
@@ -96,7 +118,6 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-[650px] max-h-[90vh] rounded-2xl p-6 shadow-2xl overflow-y-auto custom-scrollbar">
-        {/* VISTA 1: ÉXITO - MOSTRAR CONTRASEÑA GENERADA */}
         {generatedPassword ? (
           <div className="flex flex-col items-center py-6 text-center">
             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mb-4">
@@ -136,12 +157,12 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
             </button>
           </div>
         ) : (
-          /* VISTA 2: FORMULARIO DE CAPTURA ORIGINAL */
           <>
-            {/* Header */}
             <div className="flex justify-between items-center mb-1">
               <h2 className="text-xl font-bold text-primary m-0">
-                Registrar Nuevo Colaborador
+                {isEditMode
+                  ? "Editar Colaborador"
+                  : "Registrar Nuevo Colaborador"}
               </h2>
               <button
                 onClick={handleCloseAndReset}
@@ -152,8 +173,9 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
             </div>
 
             <p className="text-xs text-accent text-left mb-4">
-              Completa el expediente del colaborador. Se generará un acceso
-              temporal de forma automática.
+              {isEditMode
+                ? "Actualiza el expediente del colaborador."
+                : "Completa el expediente del colaborador. Se generará un acceso temporal de forma automática."}
             </p>
 
             {error && (
@@ -166,7 +188,6 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
               onSubmit={handleSubmit}
               className="flex flex-col gap-4 text-left"
             >
-              {/* SECCIÓN 1: DATOS PERSONALES */}
               <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-1">
                 Datos Personales
               </h3>
@@ -262,7 +283,6 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
                 />
               </div>
 
-              {/* SECCIÓN 2: PUESTO Y SEGURO */}
               <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
                 Información Laboral
               </h3>
@@ -311,7 +331,6 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
                 />
               </div>
 
-              {/* SECCIÓN 3: CONTACTO DE EMERGENCIA */}
               <h3 className="text-sm font-semibold text-secondary border-b border-blue-100 pb-1 mt-2">
                 Contacto de Emergencia
               </h3>
@@ -346,7 +365,6 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
                 </div>
               </div>
 
-              {/* Botones de Acción */}
               <div className="flex justify-end gap-3 mt-3">
                 <button
                   type="button"
@@ -361,7 +379,13 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh }) => {
                   disabled={loading}
                   className="px-5 py-2 rounded-full bg-secondary text-xs font-semibold text-white hover:bg-[#14676f] transition-colors cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-1"
                 >
-                  {loading ? "Registrando..." : "Enviar Invitación"}
+                  {loading
+                    ? isEditMode
+                      ? "Guardando..."
+                      : "Registrando..."
+                    : isEditMode
+                      ? "Guardar Cambios"
+                      : "Enviar Invitación"}
                 </button>
               </div>
             </form>

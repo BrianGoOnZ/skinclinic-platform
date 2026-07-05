@@ -20,7 +20,12 @@ const Sidebar = ({ activeView, setActiveView, onLogout, userRole }) => {
     { id: "servicios", label: "Servicios", icon: <LuBriefcase size={20} /> },
     { id: "agenda", label: "Agenda", icon: <LuCalendarDays size={20} /> },
     { id: "clientes", label: "Clientes", icon: <LuUser size={20} /> },
-    { id: "empleados", label: "Empleados", icon: <LuUsers size={20} /> },
+    {
+      id: "empleados",
+      label: "Empleados",
+      icon: <LuUsers size={20} />,
+      adminOnly: true,
+    },
     {
       id: "ingresos",
       label: "Ingresos",

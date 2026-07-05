@@ -3,6 +3,10 @@ import {
   register,
   login,
   getAllUsers,
+  getUserById,
+  updateUser,
+  deactivateUser,
+  reactivateUser,
   changePassword,
   getMe,
   logout,
@@ -11,30 +15,39 @@ import { protect, restrictTo } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Endpoints públicos de autenticación
-router.post("/register", register);
 router.post("/login", login);
-router.get("/usuarios", protect, getAllUsers);
 router.get("/me", protect, getMe);
 router.post("/logout", protect, logout);
-
-// ENDPOINTS DE PRUEBA DE SEGURIDAD (Rutas Protegidas)
-
-// Ruta protegida general: Cualquier usuario logueado puede entrar
-router.get("/dashboard-general", protect, (req, res) => {
-  res.status(200).json({
-    message: "Access granted to general dashboard. Token is valid!",
-  });
-});
-
-// Ruta con restricción de rol: SÓLO usuarios con rol 'Administrador' pueden entrar
-router.get("/admin-only", protect, restrictTo("Administrador"), (req, res) => {
-  res.status(200).json({
-    message: "Access granted. Welcome to the admin panel!",
-  });
-});
-
-// Ruta para actualizar la contraseña temporal en el primer ingreso (Limpia y protegida)
 router.post("/change-password", protect, changePassword);
+
+// Solo la Administradora gestiona colaboradores
+router.post("/register", protect, restrictTo("Administrador"), register);
+router.get("/usuarios", protect, restrictTo("Administrador"), getAllUsers);
+router.get("/usuarios/:id", protect, restrictTo("Administrador"), getUserById);
+router.put("/usuarios/:id", protect, restrictTo("Administrador"), updateUser);
+router.patch(
+  "/usuarios/:id/delete",
+  protect,
+  restrictTo("Administrador"),
+  deactivateUser,
+);
+router.patch(
+  "/usuarios/:id/reactivate",
+  protect,
+  restrictTo("Administrador"),
+  reactivateUser,
+);
+
+router.get("/dashboard-general", protect, (req, res) => {
+  res
+    .status(200)
+    .json({ message: "Access granted to general dashboard. Token is valid!" });
+});
+
+router.get("/admin-only", protect, restrictTo("Administrador"), (req, res) => {
+  res
+    .status(200)
+    .json({ message: "Access granted. Welcome to the admin panel!" });
+});
 
 export default router;

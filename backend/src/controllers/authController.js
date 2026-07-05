@@ -222,3 +222,92 @@ export const logout = async (req, res) => {
 
   res.status(200).json({ message: "Sesión cerrada correctamente" });
 };
+
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Colaborador no encontrado" });
+    }
+
+    const { password, id: userId, ...userData } = user.toJSON();
+
+    res.status(200).json({ user_id: userId, ...userData });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching employee",
+      error: error.message,
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Colaborador no encontrado" });
+    }
+
+    const { password, ...updatableFields } = req.body;
+    await user.update(updatableFields);
+
+    const { password: _pw, id: userId, ...userData } = user.toJSON();
+
+    res.status(200).json({ user_id: userId, ...userData });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while updating employee",
+      error: error.message,
+    });
+  }
+};
+
+export const deactivateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Colaborador no encontrado" });
+    }
+
+    await user.update({ isActive: false });
+
+    res.status(200).json({
+      message: "Colaborador desactivado correctamente (Baja Lógica)",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while deactivating employee",
+      error: error.message,
+    });
+  }
+};
+
+export const reactivateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Colaborador no encontrado" });
+    }
+
+    if (user.isActive) {
+      return res.status(400).json({ message: "El colaborador ya está activo" });
+    }
+
+    await user.update({ isActive: true });
+
+    res.status(200).json({ message: "Colaborador reactivado correctamente" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while reactivating employee",
+      error: error.message,
+    });
+  }
+};

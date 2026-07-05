@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 // ============================================================================
 // SECCIÓN 1: GENERACIÓN DE TOKENS (Para usar en el Login)
@@ -34,7 +35,16 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = decoded; // Inyecta id y role en la petición
+
+    const user = await User.findByPk(decoded.id, {
+      attributes: ["id", "isActive"],
+    });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "Account inactive or not found" });
+    }
+
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(401).json({
