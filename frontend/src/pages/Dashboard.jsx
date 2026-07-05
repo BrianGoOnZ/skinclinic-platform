@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Employees from "./Employees";
 import CustomersPage from "./CustomersPage";
 import AddCustomerModal from "../components/AddCustomerModal";
+import Agenda from "./Agenda";
 
 const DashboardPage = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -25,6 +26,7 @@ const DashboardPage = ({ user, onLogout }) => {
           );
         }
         return <Employees currentUserRole={user?.role} />;
+
       case "clientes":
         return (
           <CustomersPage
@@ -32,6 +34,10 @@ const DashboardPage = ({ user, onLogout }) => {
             onOpenAddModal={() => setIsModalOpen(true)}
           />
         );
+
+      case "agenda":
+        return <Agenda currentUserRole={user?.role} />;
+
       case "dashboard":
         return (
           <div className="flex flex-col gap-6 w-full text-left">
@@ -48,12 +54,14 @@ const DashboardPage = ({ user, onLogout }) => {
                   : "Dashboard Colaborador"}
               </span>
               <p className="text-sm text-accent font-medium">
-                Este panel está en construcción. Los módulos de Agenda, Ingresos
-                y Rendimiento se conectarán aquí una vez completados.
+                Este panel está en construcción. Los módulos de Ingresos y
+                Rendimiento se conectarán aquí una vez completados.
               </p>
             </div>
           </div>
         );
+
+      default:
         return (
           <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
             Sección {activeView} en desarrollo.

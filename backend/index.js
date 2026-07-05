@@ -5,6 +5,8 @@ import cors from "cors";
 import sequelize from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
+import appointmentRoutes from "./src/routes/appointmentRoutes.js";
+import serviceRoutes from "./src/routes/serviceRoutes.js";
 
 dotenv.config();
 
@@ -24,6 +26,9 @@ app.use(cookieParser());
 // Endpoints del sistema
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
+
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/services", serviceRoutes);
 
 const PORT = process.env.PORT || 5000;
 
