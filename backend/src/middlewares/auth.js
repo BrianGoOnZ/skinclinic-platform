@@ -1,10 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// ============================================================================
-// SECCIÓN 1: GENERACIÓN DE TOKENS (Para usar en el Login)
-// ============================================================================
-
 // Generar Access Token (Corta duración: 15 min)
 export const generateAccessToken = (user) => {
   return jwt.sign(
@@ -21,10 +17,6 @@ export const generateRefreshToken = (user) => {
   });
 };
 
-// ============================================================================
-// SECCIÓN 2: MIDDLEWARES DE PROTECCIÓN (Policías de Tráfico - RBAC)
-// ============================================================================
-
 // Intercepta la petición y valida que el usuario esté logueado mediante su cookie
 export const protect = async (req, res, next) => {
   try {
@@ -37,14 +29,14 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
     const user = await User.findByPk(decoded.id, {
-      attributes: ["id", "isActive"],
+      attributes: ["id", "role", "isActive"],
     });
 
     if (!user || !user.isActive) {
       return res.status(401).json({ message: "Account inactive or not found" });
     }
 
-    req.user = decoded;
+    req.user = { id: user.id, role: user.role };
     next();
   } catch (error) {
     return res.status(401).json({

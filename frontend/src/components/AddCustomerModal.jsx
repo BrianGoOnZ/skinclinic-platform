@@ -1,29 +1,47 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
 
-const AddCustomerModal = ({ isOpen, onClose, onRefresh }) => {
-  const initialFormState = {
-    name: "",
-    phone: "",
-    email: "",
-    birthdate: "",
-    gender: "M",
-    address: "",
-    occupation: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-    medicalInsuranceNumber: "",
-  };
+const initialFormState = {
+  name: "",
+  phone: "",
+  email: "",
+  birthdate: "",
+  gender: "M",
+  address: "",
+  occupation: "",
+  emergencyContactName: "",
+  emergencyContactPhone: "",
+  medicalInsuranceNumber: "",
+};
+
+const AddCustomerModal = ({ isOpen, onClose, onRefresh, customer }) => {
+  const isEditMode = Boolean(customer);
 
   const [formData, setFormData] = useState(initialFormState);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(initialFormState);
       setError("");
+      if (isEditMode) {
+        setFormData({
+          name: customer.name || "",
+          phone: customer.phone || "",
+          email: customer.email || "",
+          birthdate: customer.birthdate ? customer.birthdate.slice(0, 10) : "",
+          gender: customer.gender || "M",
+          address: customer.address || "",
+          occupation: customer.occupation || "",
+          emergencyContactName: customer.emergencyContactName || "",
+          emergencyContactPhone: customer.emergencyContactPhone || "",
+          medicalInsuranceNumber: customer.medicalInsuranceNumber || "",
+        });
+      } else {
+        setFormData(initialFormState);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, customer]);
 
   if (!isOpen) return null;
 
@@ -33,12 +51,24 @@ const AddCustomerModal = ({ isOpen, onClose, onRefresh }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      await api.post("/customers/create", formData);
+      if (isEditMode) {
+        await api.put(`/customers/${customer.customerId}`, formData);
+      } else {
+        await api.post("/customers/create", formData);
+      }
       onRefresh();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Error al registrar el cliente");
+      setError(
+        err.response?.data?.message ||
+          `Error al ${isEditMode ? "actualizar" : "registrar"} el cliente`,
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,7 +77,7 @@ const AddCustomerModal = ({ isOpen, onClose, onRefresh }) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col text-left">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/70">
           <h2 className="text-lg font-bold text-primary">
-            Registrar Nuevo Cliente
+            {isEditMode ? "Editar Cliente" : "Registrar Nuevo Cliente"}
           </h2>
           <button
             onClick={onClose}
@@ -218,9 +248,14 @@ const AddCustomerModal = ({ isOpen, onClose, onRefresh }) => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
+              disabled={loading}
+              className="px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md disabled:opacity-50"
             >
-              Guardar Cliente
+              {loading
+                ? "Guardando..."
+                : isEditMode
+                  ? "Guardar Cambios"
+                  : "Guardar Cliente"}
             </button>
           </div>
         </form>

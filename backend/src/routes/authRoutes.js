@@ -10,12 +10,14 @@ import {
   changePassword,
   getMe,
   logout,
+  refreshToken,
 } from "../controllers/authController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 
 const router = express.Router();
 
 router.post("/login", login);
+router.post("/refresh", refreshToken);
 router.get("/me", protect, getMe);
 router.post("/logout", protect, logout);
 router.post("/change-password", protect, changePassword);

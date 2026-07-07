@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
 import {
@@ -307,6 +308,45 @@ export const reactivateUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while reactivating employee",
+      error: error.message,
+    });
+  }
+};
+
+// Renueva el accessToken usando el refreshToken de larga duración
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Refresh token no proporcionado" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+
+    const user = await User.findByPk(decoded.id, {
+      attributes: ["id", "role", "isActive"],
+    });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "Account inactive or not found" });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.status(200).json({ message: "Token renovado correctamente" });
+  } catch (error) {
+    return res.status(401).json({
+      message: "Refresh token inválido o expirado",
       error: error.message,
     });
   }

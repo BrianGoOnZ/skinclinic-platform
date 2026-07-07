@@ -3,17 +3,10 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Employees from "./Employees";
 import CustomersPage from "./CustomersPage";
-import AddCustomerModal from "../components/AddCustomerModal";
 import Agenda from "./Agenda";
 
 const DashboardPage = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState("dashboard");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleRefreshCustomers = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
 
   const renderContent = () => {
     switch (activeView) {
@@ -28,12 +21,7 @@ const DashboardPage = ({ user, onLogout }) => {
         return <Employees currentUserRole={user?.role} />;
 
       case "clientes":
-        return (
-          <CustomersPage
-            key={refreshKey}
-            onOpenAddModal={() => setIsModalOpen(true)}
-          />
-        );
+        return <CustomersPage />;
 
       case "agenda":
         return <Agenda currentUserRole={user?.role} />;
@@ -85,12 +73,6 @@ const DashboardPage = ({ user, onLogout }) => {
           {renderContent()}
         </main>
       </div>
-
-      <AddCustomerModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onRefresh={handleRefreshCustomers}
-      />
     </div>
   );
 };

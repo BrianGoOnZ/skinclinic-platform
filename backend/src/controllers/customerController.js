@@ -62,7 +62,6 @@ export const createCustomer = async (req, res) => {
 export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.findAll({
-      where: { isActive: true },
       order: [["customer_id", "DESC"]],
     });
     res.status(200).json(customers);

@@ -54,10 +54,6 @@ const LoginSPA = ({ onLoginSuccess }) => {
 
       setMustChangePass(false);
       onLoginSuccess({ ...user, mustChangePassword: false });
-
-      console.log("Contraseña actualizada con éxito");
-      setMustChangePass(false);
-      setIsLoggedIn(true);
     } catch (err) {
       setPassError(
         err.response?.data?.message || "Error al actualizar la contraseña",

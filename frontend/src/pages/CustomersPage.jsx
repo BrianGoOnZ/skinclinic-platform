@@ -1,29 +1,65 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
-import { LuSearch, LuPlus, LuPencil, LuTrash2 } from "react-icons/lu";
+import { LuSearch, LuPlus, LuPencil } from "react-icons/lu";
+import AddCustomerModal from "../components/AddCustomerModal";
 
-const CustomersPage = ({ onOpenAddModal }) => {
+const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/customers");
+      setCustomers(response.data);
+      setError("");
+    } catch (err) {
+      setError("No se pudo conectar con el panel de clientes.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/customers");
-        setCustomers(response.data);
-        setError("");
-      } catch (err) {
-        setError("No se pudo conectar con el panel de clientes.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchCustomers();
   }, []);
+
+  const handleOpenCreate = () => {
+    setEditingCustomer(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = async (customerId) => {
+    try {
+      const response = await api.get(`/customers/${customerId}`);
+      setEditingCustomer(response.data);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleActive = async (customer) => {
+    setTogglingId(customer.customerId);
+    try {
+      if (customer.isActive) {
+        await api.patch(`/customers/${customer.customerId}/delete`);
+      } else {
+        await api.patch(`/customers/${customer.customerId}/reactivate`);
+      }
+      await fetchCustomers();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -54,7 +90,7 @@ const CustomersPage = ({ onOpenAddModal }) => {
 
         <button
           className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
-          onClick={onOpenAddModal}
+          onClick={handleOpenCreate}
         >
           <LuPlus size={14} /> Nuevo Cliente
         </button>
@@ -78,10 +114,10 @@ const CustomersPage = ({ onOpenAddModal }) => {
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/70">
-                  <th className="p-4 text-xs font-bold text-primary w-[30%]">
+                  <th className="p-4 text-xs font-bold text-primary w-[25%]">
                     Cliente
                   </th>
-                  <th className="p-4 text-xs font-bold text-primary w-[30%]">
+                  <th className="p-4 text-xs font-bold text-primary w-[25%]">
                     Contacto
                   </th>
                   <th className="p-4 text-xs font-bold text-primary w-[15%]">
@@ -90,20 +126,21 @@ const CustomersPage = ({ onOpenAddModal }) => {
                   <th className="p-4 text-xs font-bold text-primary w-[15%]">
                     Fecha Registro
                   </th>
-                  <th className="p-4 text-xs font-bold text-primary w-[10%] text-right">
+                  <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
                     Acciones
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredCustomers.map((customer, index) => (
+                {filteredCustomers.map((customer) => (
                   <tr
-                    key={customer.customer_id || index}
+                    key={customer.customerId}
                     className="hover:bg-gray-50/50 transition-colors"
+                    style={{ opacity: customer.isActive ? 1 : 0.5 }}
                   >
                     <td className="p-4">
                       <span className="text-sm font-semibold text-primary block">
-                        {customer.name}
+                        {customer.name} {!customer.isActive && "(Inactivo)"}
                       </span>
                     </td>
                     <td className="p-4 vertical-middle">
@@ -128,10 +165,7 @@ const CustomersPage = ({ onOpenAddModal }) => {
                     <td className="p-4 vertical-middle">
                       <span className="text-sm text-primary">
                         {new Date(
-                          customer.createdAt ||
-                            customer.created_at ||
-                            customer.date_registered ||
-                            Date.now(),
+                          customer.createdAt || Date.now(),
                         ).toLocaleDateString("es-MX", {
                           day: "numeric",
                           month: "short",
@@ -140,12 +174,29 @@ const CustomersPage = ({ onOpenAddModal }) => {
                       </span>
                     </td>
                     <td className="p-4 text-right vertical-middle">
-                      <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => handleOpenEdit(customer.customerId)}
+                          className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer"
+                          title="Editar"
+                        >
                           <LuPencil size={16} />
                         </button>
-                        <button className="p-1.5 text-accent hover:text-red-600 transition-colors cursor-pointer">
-                          <LuTrash2 size={16} />
+                        <button
+                          onClick={() => handleToggleActive(customer)}
+                          disabled={togglingId === customer.customerId}
+                          className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
+                            customer.isActive ? "bg-secondary" : "bg-gray-300"
+                          }`}
+                          title={customer.isActive ? "Desactivar" : "Activar"}
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              customer.isActive
+                                ? "translate-x-5"
+                                : "translate-x-0"
+                            }`}
+                          />
                         </button>
                       </div>
                     </td>
@@ -156,6 +207,13 @@ const CustomersPage = ({ onOpenAddModal }) => {
           </div>
         )}
       </div>
+
+      <AddCustomerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onRefresh={fetchCustomers}
+        customer={editingCustomer}
+      />
     </div>
   );
 };
