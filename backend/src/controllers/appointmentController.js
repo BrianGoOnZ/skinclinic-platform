@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
 import Service from "../models/Service.js";
@@ -12,6 +13,31 @@ const appointmentIncludes = [
   { model: Service, as: "service", attributes: ["serviceId", "name", "brand"] },
   { model: User, as: "collaborator", attributes: ["id", "name"] },
 ];
+
+const conflictIncludes = [
+  { model: Customer, as: "customer", attributes: ["name"] },
+  { model: Service, as: "service", attributes: ["name"] },
+];
+
+const findConflictingAppointment = async (
+  userId,
+  startTime,
+  endTime,
+  excludeId = null,
+) => {
+  const where = {
+    userId,
+    status: { [Op.ne]: "Cancelada" },
+    startTime: { [Op.lt]: endTime },
+    endTime: { [Op.gt]: startTime },
+  };
+
+  if (excludeId) {
+    where.appointmentId = { [Op.ne]: excludeId };
+  }
+
+  return Appointment.findOne({ where, include: conflictIncludes });
+};
 
 export const getAllAppointments = async (req, res) => {
   try {
@@ -28,9 +54,35 @@ export const getAllAppointments = async (req, res) => {
   }
 };
 
+export const checkAppointmentConflict = async (req, res) => {
+  try {
+    const { userId, startTime, endTime, excludeId } = req.query;
+
+    if (!userId || !startTime || !endTime) {
+      return res
+        .status(400)
+        .json({ message: "Faltan parámetros para validar el conflicto" });
+    }
+
+    const conflict = await findConflictingAppointment(
+      userId,
+      startTime,
+      endTime,
+      excludeId,
+    );
+
+    res.status(200).json({ hasConflict: Boolean(conflict), conflict });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while checking appointment conflict",
+      error: error.message,
+    });
+  }
+};
+
 export const createAppointment = async (req, res) => {
   try {
-    const { customerId, serviceId, userId, marca, startTime, endTime } =
+    const { customerId, serviceId, userId, marca, startTime, endTime, force } =
       req.body;
 
     if (!customerId || !serviceId || !marca || !startTime || !endTime) {
@@ -45,6 +97,22 @@ export const createAppointment = async (req, res) => {
         .json({
           message: "La hora de fin debe ser posterior a la hora de inicio",
         });
+    }
+
+    if (userId) {
+      const conflict = await findConflictingAppointment(
+        userId,
+        startTime,
+        endTime,
+      );
+      const canOverride = force === true && req.user.role === "Administrador";
+
+      if (conflict && !canOverride) {
+        return res.status(409).json({
+          message: "El colaborador ya tiene una cita asignada en ese horario",
+          conflict,
+        });
+      }
     }
 
     const newAppointment = await Appointment.create({
@@ -81,13 +149,34 @@ export const updateAppointment = async (req, res) => {
       return res.status(404).json({ message: "Cita no encontrada" });
     }
 
-    const { startTime, endTime } = req.body;
+    const { userId, startTime, endTime, force } = req.body;
+    const effectiveUserId = userId !== undefined ? userId : appointment.userId;
+    const effectiveStart = startTime || appointment.startTime;
+    const effectiveEnd = endTime || appointment.endTime;
+
     if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
       return res
         .status(400)
         .json({
           message: "La hora de fin debe ser posterior a la hora de inicio",
         });
+    }
+
+    if (effectiveUserId) {
+      const conflict = await findConflictingAppointment(
+        effectiveUserId,
+        effectiveStart,
+        effectiveEnd,
+        id,
+      );
+      const canOverride = force === true && req.user.role === "Administrador";
+
+      if (conflict && !canOverride) {
+        return res.status(409).json({
+          message: "El colaborador ya tiene una cita asignada en ese horario",
+          conflict,
+        });
+      }
     }
 
     await appointment.update(req.body);

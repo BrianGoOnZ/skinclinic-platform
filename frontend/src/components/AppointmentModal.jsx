@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { LuTriangleAlert } from "react-icons/lu";
 import api from "../services/api";
+import ConflictOverrideModal from "./ConflictOverrideModal";
 
 const initialFormState = {
   marca: "Modelha DK",
@@ -17,11 +19,16 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
   const [collaborators, setCollaborators] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [liveConflict, setLiveConflict] = useState(null);
+  const [conflictToConfirm, setConflictToConfirm] = useState(null);
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setFormData(initialFormState);
       setError("");
+      setLiveConflict(null);
+      setShowOverrideModal(false);
       fetchOptions();
     }
   }, [isOpen]);
@@ -30,8 +37,37 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
     if (isOpen) {
       fetchServicesByBrand(formData.marca);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.marca, isOpen]);
+
+  useEffect(() => {
+    if (!formData.userId || !formData.startTime || !formData.endTime) {
+      setLiveConflict(null);
+      return;
+    }
+    if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+      setLiveConflict(null);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await api.get("/appointments/check-conflict", {
+          params: {
+            userId: formData.userId,
+            startTime: formData.startTime,
+            endTime: formData.endTime,
+          },
+        });
+        setLiveConflict(
+          response.data.hasConflict ? response.data.conflict : null,
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.userId, formData.startTime, formData.endTime]);
 
   const fetchOptions = async () => {
     try {
@@ -64,8 +100,7 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const submitAppointment = async (force = false) => {
     setLoading(true);
     setError("");
 
@@ -77,14 +112,30 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
         marca: formData.marca,
         startTime: formData.startTime,
         endTime: formData.endTime,
+        force,
       });
       onRefresh();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Error al agendar la cita");
+      if (err.response?.status === 409) {
+        setConflictToConfirm(err.response.data.conflict);
+        setShowOverrideModal(true);
+      } else {
+        setError(err.response?.data?.message || "Error al agendar la cita");
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await submitAppointment(false);
+  };
+
+  const handleForceOverride = async () => {
+    await submitAppointment(true);
+    setShowOverrideModal(false);
   };
 
   return (
@@ -224,6 +275,17 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
             </div>
           </div>
 
+          {liveConflict && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+              <LuTriangleAlert size={16} className="shrink-0 mt-0.5" />
+              <span>
+                Este colaborador ya tiene la cita de{" "}
+                <strong>{liveConflict.customer?.name || "otro cliente"}</strong>{" "}
+                en un horario que se cruza. Podrás forzar la reserva al guardar.
+              </span>
+            </div>
+          )}
+
           <div className="border-t border-gray-100 pt-4 flex justify-end gap-2 bg-gray-50/70 -mx-6 -mb-6 p-4">
             <button
               type="button"
@@ -242,6 +304,14 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
           </div>
         </form>
       </div>
+
+      <ConflictOverrideModal
+        isOpen={showOverrideModal}
+        conflict={conflictToConfirm}
+        onCancel={() => setShowOverrideModal(false)}
+        onForce={handleForceOverride}
+        loading={loading}
+      />
     </div>
   );
 };

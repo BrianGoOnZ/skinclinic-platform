@@ -1,9 +1,6 @@
 version: "3.8"
 
 services:
-  # ============================================================================
-  # SERVICIO DE BASE DE DATOS (MySQL)
-  # ============================================================================
   db:
     image: mysql:8.0
     container_name: skinclinic-db
@@ -11,19 +8,14 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: mode321
       MYSQL_DATABASE: clinic_management_db
+      TZ: America/Monterrey
     ports:
       - "3306:3306"
     volumes:
-      # 1. Guarda los datos reales en tu carpeta local (asegúrate de que esté en tu .gitignore)
       - ./mysql_data:/var/lib/mysql
-      # 2. Carga automáticamente el script maestro final que guardamos
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - skinclinic-network
-
-  # ============================================================================
-  # SERVICIO BACKEND (Node.js)
-  # ============================================================================
   backend:
     build:
       context: ./backend
@@ -38,6 +30,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=mode321
       - DB_NAME=clinic_management_db
+      - TZ=America/Monterrey
     depends_on:
       - db
     networks:
