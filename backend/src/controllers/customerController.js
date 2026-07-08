@@ -1,4 +1,5 @@
 import Customer from "../models/Customer.js";
+import { Op } from "sequelize";
 
 export const createCustomer = async (req, res) => {
   try {
@@ -52,8 +53,44 @@ export const createCustomer = async (req, res) => {
         customerData.createdAt || customerData.created_at || new Date(),
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({
+        message:
+          "Ya existe un cliente registrado con ese teléfono o correo electrónico",
+      });
+    }
     res.status(500).json({
       message: "Server error while creating customer",
+      error: error.message,
+    });
+  }
+};
+
+export const searchCustomers = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.status(200).json([]);
+    }
+
+    const customers = await Customer.findAll({
+      where: {
+        isActive: true,
+        [Op.or]: [
+          { name: { [Op.like]: `%${q}%` } },
+          { phone: { [Op.like]: `%${q}%` } },
+        ],
+      },
+      attributes: ["customerId", "name", "phone", "email"],
+      order: [["name", "ASC"]],
+      limit: 10,
+    });
+
+    res.status(200).json(customers);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while searching customers",
       error: error.message,
     });
   }

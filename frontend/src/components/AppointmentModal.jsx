@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
 import api from "../services/api";
 import ConflictOverrideModal from "./ConflictOverrideModal";
+import CustomerAutocomplete from "./CustomerAutocomplete";
 import {
   APPOINTMENT_STATUSES,
   STATUS_META,
@@ -9,7 +10,6 @@ import {
 
 const initialFormState = {
   marca: "Modelha DK",
-  customerId: "",
   serviceId: "",
   userId: "",
   startTime: "",
@@ -27,7 +27,7 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   const isEditMode = Boolean(appointment);
 
   const [formData, setFormData] = useState(initialFormState);
-  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [services, setServices] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
   const [error, setError] = useState("");
@@ -45,9 +45,6 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
       if (isEditMode) {
         setFormData({
           marca: appointment.marca,
-          customerId: String(
-            appointment.customer?.customerId || appointment.customerId || "",
-          ),
           serviceId: String(
             appointment.service?.serviceId || appointment.serviceId || "",
           ),
@@ -60,11 +57,21 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
           endTime: toDatetimeLocalValue(appointment.endTime),
           status: appointment.status,
         });
+        setSelectedCustomer(
+          appointment.customer
+            ? {
+                customerId: appointment.customer.customerId,
+                name: appointment.customer.name,
+                phone: appointment.customer.phone,
+              }
+            : null,
+        );
       } else {
         setFormData(initialFormState);
+        setSelectedCustomer(null);
       }
 
-      fetchOptions();
+      fetchCollaborators();
     }
   }, [isOpen, appointment]);
 
@@ -112,13 +119,9 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
     appointment,
   ]);
 
-  const fetchOptions = async () => {
+  const fetchCollaborators = async () => {
     try {
-      const [customersRes, usersRes] = await Promise.all([
-        api.get("/customers"),
-        api.get("/auth/usuarios"),
-      ]);
-      setCustomers(customersRes.data);
+      const usersRes = await api.get("/auth/usuarios");
       setCollaborators(usersRes.data.filter((u) => u.is_active));
     } catch (err) {
       console.error(err);
@@ -143,7 +146,7 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   };
 
   const buildPayload = (force) => ({
-    customerId: Number(formData.customerId),
+    customerId: selectedCustomer ? Number(selectedCustomer.customerId) : null,
     serviceId: Number(formData.serviceId),
     userId: formData.userId ? Number(formData.userId) : null,
     marca: formData.marca,
@@ -153,6 +156,11 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   });
 
   const submitAppointment = async (force = false) => {
+    if (!selectedCustomer) {
+      setError("Selecciona o registra un cliente para continuar");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -291,20 +299,10 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Cliente *
             </label>
-            <select
-              name="customerId"
-              required
-              value={formData.customerId}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
-            >
-              <option value="">Selecciona un cliente</option>
-              {customers.map((c) => (
-                <option key={c.customerId} value={c.customerId}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <CustomerAutocomplete
+              value={selectedCustomer}
+              onSelect={setSelectedCustomer}
+            />
           </div>
 
           <div>
