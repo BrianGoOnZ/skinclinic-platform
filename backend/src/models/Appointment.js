@@ -43,9 +43,15 @@ const Appointment = sequelize.define(
       field: "end_time",
     },
     status: {
-      type: DataTypes.ENUM("Pendiente", "Confirmada", "Asistio", "Cancelada"),
+      type: DataTypes.ENUM(
+        "Programada",
+        "Confirmada",
+        "En Tratamiento",
+        "Completada",
+        "Cancelada",
+      ),
       allowNull: false,
-      defaultValue: "Pendiente",
+      defaultValue: "Programada",
     },
   },
   {

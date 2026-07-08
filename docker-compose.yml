@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: mysql:8.0
@@ -14,8 +12,15 @@ services:
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmode321"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - skinclinic-network
+
   backend:
     build:
       context: ./backend
@@ -32,13 +37,12 @@ services:
       - DB_NAME=clinic_management_db
       - TZ=America/Monterrey
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - skinclinic-network
 
-  # ============================================================================
-  # SERVICIO FRONTEND (Vite / React)
-  # ============================================================================
   frontend:
     build:
       context: ./frontend

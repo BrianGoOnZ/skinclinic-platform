@@ -41,7 +41,11 @@ const findConflictingAppointment = async (
 
 export const getAllAppointments = async (req, res) => {
   try {
+    const where =
+      req.user.role === "Administrador" ? {} : { userId: req.user.id };
+
     const appointments = await Appointment.findAll({
+      where,
       include: appointmentIncludes,
       order: [["startTime", "ASC"]],
     });
@@ -92,11 +96,9 @@ export const createAppointment = async (req, res) => {
     }
 
     if (new Date(endTime) <= new Date(startTime)) {
-      return res
-        .status(400)
-        .json({
-          message: "La hora de fin debe ser posterior a la hora de inicio",
-        });
+      return res.status(400).json({
+        message: "La hora de fin debe ser posterior a la hora de inicio",
+      });
     }
 
     if (userId) {
@@ -155,11 +157,9 @@ export const updateAppointment = async (req, res) => {
     const effectiveEnd = endTime || appointment.endTime;
 
     if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
-      return res
-        .status(400)
-        .json({
-          message: "La hora de fin debe ser posterior a la hora de inicio",
-        });
+      return res.status(400).json({
+        message: "La hora de fin debe ser posterior a la hora de inicio",
+      });
     }
 
     if (effectiveUserId) {
@@ -197,7 +197,13 @@ export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const validStatuses = ["Pendiente", "Confirmada", "Asistio", "Cancelada"];
+    const validStatuses = [
+      "Programada",
+      "Confirmada",
+      "En Tratamiento",
+      "Completada",
+      "Cancelada",
+    ];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Estado no válido" });

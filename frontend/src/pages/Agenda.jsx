@@ -9,6 +9,8 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { LuPlus } from "react-icons/lu";
 import api from "../services/api";
 import AppointmentModal from "../components/AppointmentModal";
+import AppointmentDetailsModal from "../components/AppointmentDetailsModal";
+import { STATUS_META } from "../constants/appointmentStatus";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -28,6 +30,8 @@ const Agenda = ({ currentUserRole }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
+  const [viewingAppointment, setViewingAppointment] = useState(null);
   const [currentView, setCurrentView] = useState(Views.MONTH);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -60,18 +64,34 @@ const Agenda = ({ currentUserRole }) => {
       end: new Date(appt.endTime),
       marca: appt.marca,
       status: appt.status,
+      resource: appt,
     }));
 
   const eventPropGetter = (event) => {
-    const color = BRAND_COLORS[event.marca] || "#5b9fa6";
+    const statusColor = STATUS_META[event.status]?.color || "#5b9fa6";
+    const brandColor = BRAND_COLORS[event.marca] || "#5b9fa6";
     return {
       style: {
-        backgroundColor: color,
-        borderColor: color,
-        opacity: event.status === "Cancelada" ? 0.4 : 1,
+        backgroundColor: statusColor,
+        borderLeft: `4px solid ${brandColor}`,
+        opacity: event.status === "Cancelada" ? 0.45 : 1,
         textDecoration: event.status === "Cancelada" ? "line-through" : "none",
       },
     };
+  };
+
+  const handleOpenCreate = () => {
+    setEditingAppointment(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectEvent = (event) => {
+    if (isAdmin) {
+      setEditingAppointment(event.resource);
+      setIsModalOpen(true);
+    } else {
+      setViewingAppointment(event.resource);
+    }
   };
 
   return (
@@ -79,7 +99,7 @@ const Agenda = ({ currentUserRole }) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-primary">Agenda</h1>
-          <div className="flex items-center gap-4 mt-2 text-xs font-semibold text-accent">
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-xs font-semibold text-accent">
             <span className="flex items-center gap-1.5">
               <span
                 className="w-2.5 h-2.5 rounded-full"
@@ -94,12 +114,22 @@ const Agenda = ({ currentUserRole }) => {
               />
               Depilclinik
             </span>
+            <span className="w-px h-3 bg-borderClinik" />
+            {Object.entries(STATUS_META).map(([status, meta]) => (
+              <span key={status} className="flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: meta.color }}
+                />
+                {meta.label}
+              </span>
+            ))}
           </div>
         </div>
 
         {isAdmin && (
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
           >
             <LuPlus size={14} /> Nueva Cita
@@ -129,6 +159,7 @@ const Agenda = ({ currentUserRole }) => {
               date={currentDate}
               onNavigate={setCurrentDate}
               eventPropGetter={eventPropGetter}
+              onSelectEvent={handleSelectEvent}
               messages={{
                 next: "Sig.",
                 previous: "Ant.",
@@ -147,6 +178,13 @@ const Agenda = ({ currentUserRole }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onRefresh={fetchAppointments}
+        appointment={editingAppointment}
+      />
+
+      <AppointmentDetailsModal
+        isOpen={Boolean(viewingAppointment)}
+        appointment={viewingAppointment}
+        onClose={() => setViewingAppointment(null)}
       />
     </div>
   );

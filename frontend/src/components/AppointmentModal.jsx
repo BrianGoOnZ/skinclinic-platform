@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
 import api from "../services/api";
 import ConflictOverrideModal from "./ConflictOverrideModal";
+import {
+  APPOINTMENT_STATUSES,
+  STATUS_META,
+} from "../constants/appointmentStatus";
 
 const initialFormState = {
   marca: "Modelha DK",
@@ -10,9 +14,18 @@ const initialFormState = {
   userId: "",
   startTime: "",
   endTime: "",
+  status: "Programada",
 };
 
-const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
+const toDatetimeLocalValue = (isoString) => {
+  const date = new Date(isoString);
+  const offsetMs = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+};
+
+const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
+  const isEditMode = Boolean(appointment);
+
   const [formData, setFormData] = useState(initialFormState);
   const [customers, setCustomers] = useState([]);
   const [services, setServices] = useState([]);
@@ -25,18 +38,41 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(initialFormState);
       setError("");
       setLiveConflict(null);
       setShowOverrideModal(false);
+
+      if (isEditMode) {
+        setFormData({
+          marca: appointment.marca,
+          customerId: String(
+            appointment.customer?.customerId || appointment.customerId || "",
+          ),
+          serviceId: String(
+            appointment.service?.serviceId || appointment.serviceId || "",
+          ),
+          userId: appointment.collaborator?.id
+            ? String(appointment.collaborator.id)
+            : appointment.userId
+              ? String(appointment.userId)
+              : "",
+          startTime: toDatetimeLocalValue(appointment.startTime),
+          endTime: toDatetimeLocalValue(appointment.endTime),
+          status: appointment.status,
+        });
+      } else {
+        setFormData(initialFormState);
+      }
+
       fetchOptions();
     }
-  }, [isOpen]);
+  }, [isOpen, appointment]);
 
   useEffect(() => {
     if (isOpen) {
       fetchServicesByBrand(formData.marca);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.marca, isOpen]);
 
   useEffect(() => {
@@ -56,6 +92,7 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
             userId: formData.userId,
             startTime: formData.startTime,
             endTime: formData.endTime,
+            excludeId: isEditMode ? appointment.appointmentId : undefined,
           },
         });
         setLiveConflict(
@@ -67,7 +104,13 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.userId, formData.startTime, formData.endTime]);
+  }, [
+    formData.userId,
+    formData.startTime,
+    formData.endTime,
+    isEditMode,
+    appointment,
+  ]);
 
   const fetchOptions = async () => {
     try {
@@ -88,7 +131,6 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
         `/services?brand=${encodeURIComponent(brand)}`,
       );
       setServices(response.data);
-      setFormData((prev) => ({ ...prev, serviceId: "" }));
     } catch (err) {
       console.error(err);
     }
@@ -100,20 +142,34 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const buildPayload = (force) => ({
+    customerId: Number(formData.customerId),
+    serviceId: Number(formData.serviceId),
+    userId: formData.userId ? Number(formData.userId) : null,
+    marca: formData.marca,
+    startTime: formData.startTime,
+    endTime: formData.endTime,
+    force,
+  });
+
   const submitAppointment = async (force = false) => {
     setLoading(true);
     setError("");
 
     try {
-      await api.post("/appointments", {
-        customerId: Number(formData.customerId),
-        serviceId: Number(formData.serviceId),
-        userId: formData.userId ? Number(formData.userId) : null,
-        marca: formData.marca,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        force,
-      });
+      if (isEditMode) {
+        await api.put(
+          `/appointments/${appointment.appointmentId}`,
+          buildPayload(force),
+        );
+        if (formData.status !== appointment.status) {
+          await api.patch(`/appointments/${appointment.appointmentId}/status`, {
+            status: formData.status,
+          });
+        }
+      } else {
+        await api.post("/appointments", buildPayload(force));
+      }
       onRefresh();
       onClose();
     } catch (err) {
@@ -121,7 +177,10 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
         setConflictToConfirm(err.response.data.conflict);
         setShowOverrideModal(true);
       } else {
-        setError(err.response?.data?.message || "Error al agendar la cita");
+        setError(
+          err.response?.data?.message ||
+            `Error al ${isEditMode ? "actualizar" : "agendar"} la cita`,
+        );
       }
     } finally {
       setLoading(false);
@@ -142,7 +201,9 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col text-left">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/70">
-          <h2 className="text-lg font-bold text-primary">Nueva Cita</h2>
+          <h2 className="text-lg font-bold text-primary">
+            {isEditMode ? "Editar Cita" : "Nueva Cita"}
+          </h2>
           <button
             onClick={onClose}
             className="text-accent hover:text-primary text-sm font-bold cursor-pointer"
@@ -161,6 +222,43 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
             </p>
           )}
 
+          {isEditMode && (
+            <div>
+              <label className="block text-xs font-bold text-primary uppercase mb-1">
+                Estado
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {APPOINTMENT_STATUSES.map((status) => {
+                  const meta = STATUS_META[status];
+                  const isSelected = formData.status === status;
+                  return (
+                    <button
+                      type="button"
+                      key={status}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, status }))
+                      }
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
+                        isSelected
+                          ? "text-white border-transparent"
+                          : "border-borderClinik text-primary hover:bg-gray-50"
+                      }`}
+                      style={isSelected ? { backgroundColor: meta.color } : {}}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor: isSelected ? "#fff" : meta.color,
+                        }}
+                      />
+                      {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Marca *
@@ -171,7 +269,11 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
                   type="button"
                   key={brand}
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, marca: brand }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      marca: brand,
+                      serviceId: "",
+                    }))
                   }
                   className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors cursor-pointer ${
                     formData.marca === brand
@@ -299,7 +401,11 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh }) => {
               disabled={loading}
               className="px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md disabled:opacity-50"
             >
-              {loading ? "Guardando..." : "Agendar Cita"}
+              {loading
+                ? "Guardando..."
+                : isEditMode
+                  ? "Guardar Cambios"
+                  : "Agendar Cita"}
             </button>
           </div>
         </form>

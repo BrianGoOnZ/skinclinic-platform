@@ -33,7 +33,7 @@ app.use("/api/services", serviceRoutes);
 const PORT = process.env.PORT || 5000;
 
 // Bucle para esperar a que el contenedor de MySQL esté listo
-async function connectWithRetry(retries = 5, delay = 5000) {
+async function connectWithRetry(retries = 10, delay = 5000) {
   while (retries > 0) {
     try {
       await sequelize.authenticate();
@@ -56,29 +56,21 @@ async function connectWithRetry(retries = 5, delay = 5000) {
   }
 }
 
-// Inicialización del servidor backend
 async function startServer() {
-  // Asegura la conexión a MySQL primero
   await connectWithRetry();
 
-  // Sincroniza y crea las tablas que hagan falta en el expediente clínico
   try {
-    if (process.env.NODE_ENV === "production") {
-      await sequelize.sync();
-      console.log(
-        "Servidor en producción: sincronización de Sequelize completada sin alteraciones.",
-      );
-    } else {
-      await sequelize.sync({ alter: true });
-      console.log(
-        "¡Tablas del expediente clínico sincronizadas y actualizadas en MySQL!",
-      );
-    }
+    await sequelize.authenticate();
+    console.log(
+      "Conexión con MySQL verificada. El esquema se gestiona manualmente vía init.sql.",
+    );
   } catch (error) {
-    console.error("Error crítico al sincronizar modelos con Sequelize:", error);
+    console.error(
+      "Error al verificar la conexión con la base de datos:",
+      error,
+    );
   }
 
-  // Enciende la escucha de Express
   app.listen(PORT, () => {
     console.log(`Servidor backend corriendo en: http://localhost:${PORT}`);
   });
