@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import ServiceInclusion from "./ServiceInclusion.js";
 
 const Service = sequelize.define(
   "Service",
@@ -55,5 +56,15 @@ const Service = sequelize.define(
     updatedAt: false,
   },
 );
+
+Service.hasMany(ServiceInclusion, {
+  foreignKey: "serviceId",
+  as: "inclusions",
+  onDelete: "CASCADE",
+});
+ServiceInclusion.belongsTo(Service, {
+  foreignKey: "serviceId",
+  as: "service",
+});
 
 export default Service;

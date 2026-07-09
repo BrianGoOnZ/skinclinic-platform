@@ -4,6 +4,16 @@ import Navbar from "../components/Navbar";
 import Employees from "./Employees";
 import CustomersPage from "./CustomersPage";
 import Agenda from "./Agenda";
+import ServicesPage from "./ServicesPage";
+
+const PAGE_TITLES = {
+  empleados: "Gestión de Colaboradores",
+  clientes: "Directorio de Clientes",
+  agenda: "Agenda",
+  servicios: "Catálogo de Servicios",
+  ingresos: "Ingresos",
+  ajustes: "Ajustes",
+};
 
 const DashboardPage = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -25,6 +35,9 @@ const DashboardPage = ({ user, onLogout }) => {
 
       case "agenda":
         return <Agenda currentUserRole={user?.role} />;
+
+      case "servicios":
+        return <ServicesPage currentUserRole={user?.role} />;
 
       case "dashboard":
         return (
@@ -68,8 +81,8 @@ const DashboardPage = ({ user, onLogout }) => {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar userName={user?.name} />
-        <main className="flex-1 p-6 pt-2 max-w-7xl w-full mx-auto">
+        <Navbar userName={user?.name} pageTitle={PAGE_TITLES[activeView]} />
+        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {renderContent()}
         </main>
       </div>

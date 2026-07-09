@@ -81,13 +81,10 @@ const Employees = ({ currentUserRole }) => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-xl font-bold text-primary">
-          Gestión de Colaboradores
-        </h1>
+      <div className="flex justify-end">
         <button
           onClick={fetchEmployees}
-          className="flex items-center justify-center gap-2 px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer self-start sm:self-center"
+          className="flex items-center justify-center gap-2 px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer"
         >
           <LuRefreshCw size={14} /> Sincronizar Datos
         </button>

@@ -68,12 +68,6 @@ const CustomersPage = ({ currentUserRole }) => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-xl font-bold text-primary">
-          Directorio de Clientes
-        </h1>
-      </div>
-
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <LuSearch

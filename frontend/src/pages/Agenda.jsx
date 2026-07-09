@@ -97,34 +97,31 @@ const Agenda = ({ currentUserRole }) => {
   return (
     <div className="flex flex-col gap-6 w-full text-left">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-primary">Agenda</h1>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-xs font-semibold text-accent">
-            <span className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-accent">
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: BRAND_COLORS["Modelha DK"] }}
+            />
+            Modelha DK
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: BRAND_COLORS["Depilclinik"] }}
+            />
+            Depilclinik
+          </span>
+          <span className="w-px h-3 bg-borderClinik" />
+          {Object.entries(STATUS_META).map(([status, meta]) => (
+            <span key={status} className="flex items-center gap-1.5">
               <span
                 className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: BRAND_COLORS["Modelha DK"] }}
+                style={{ backgroundColor: meta.color }}
               />
-              Modelha DK
+              {meta.label}
             </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: BRAND_COLORS["Depilclinik"] }}
-              />
-              Depilclinik
-            </span>
-            <span className="w-px h-3 bg-borderClinik" />
-            {Object.entries(STATUS_META).map(([status, meta]) => (
-              <span key={status} className="flex items-center gap-1.5">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: meta.color }}
-                />
-                {meta.label}
-              </span>
-            ))}
-          </div>
+          ))}
         </div>
 
         {isAdmin && (
