@@ -21,7 +21,7 @@ const DashboardPage = ({ user, onLogout }) => {
         return <Employees currentUserRole={user?.role} />;
 
       case "clientes":
-        return <CustomersPage />;
+        return <CustomersPage currentUserRole={user?.role} />;
 
       case "agenda":
         return <Agenda currentUserRole={user?.role} />;

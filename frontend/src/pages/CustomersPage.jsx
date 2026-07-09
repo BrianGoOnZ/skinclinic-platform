@@ -3,7 +3,8 @@ import api from "../services/api";
 import { LuSearch, LuPlus, LuPencil } from "react-icons/lu";
 import AddCustomerModal from "../components/AddCustomerModal";
 
-const CustomersPage = () => {
+const CustomersPage = ({ currentUserRole }) => {
+  const isAdmin = currentUserRole === "Administrador";
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -88,12 +89,14 @@ const CustomersPage = () => {
           />
         </div>
 
-        <button
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
-          onClick={handleOpenCreate}
-        >
-          <LuPlus size={14} /> Nuevo Cliente
-        </button>
+        {isAdmin && (
+          <button
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
+            onClick={handleOpenCreate}
+          >
+            <LuPlus size={14} /> Nuevo Cliente
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -123,12 +126,14 @@ const CustomersPage = () => {
                   <th className="p-4 text-xs font-bold text-primary w-[15%]">
                     Género
                   </th>
-                  <th className="p-4 text-xs font-bold text-primary w-[15%]">
+                  <th className="p-4 text-xs font-bold text-primary w-[25%]">
                     Fecha Registro
                   </th>
-                  <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
-                    Acciones
-                  </th>
+                  {isAdmin && (
+                    <th className="p-4 text-xs font-bold text-primary w-[20%] text-right">
+                      Acciones
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -173,33 +178,29 @@ const CustomersPage = () => {
                         })}
                       </span>
                     </td>
-                    <td className="p-4 text-right vertical-middle">
-                      <div className="flex items-center justify-end gap-3">
-                        <button
-                          onClick={() => handleOpenEdit(customer.customerId)}
-                          className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer"
-                          title="Editar"
-                        >
-                          <LuPencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(customer)}
-                          disabled={togglingId === customer.customerId}
-                          className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
-                            customer.isActive ? "bg-secondary" : "bg-gray-300"
-                          }`}
-                          title={customer.isActive ? "Desactivar" : "Activar"}
-                        >
-                          <span
-                            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                              customer.isActive
-                                ? "translate-x-5"
-                                : "translate-x-0"
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="p-4 text-right vertical-middle">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => handleOpenEdit(customer.customerId)}
+                            className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer"
+                            title="Editar"
+                          >
+                            <LuPencil size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(customer)}
+                            disabled={togglingId === customer.customerId}
+                            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer disabled:opacity-50 ${customer.isActive ? "bg-secondary" : "bg-gray-300"}`}
+                            title={customer.isActive ? "Desactivar" : "Activar"}
+                          >
+                            <span
+                              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${customer.isActive ? "translate-x-5" : "translate-x-0"}`}
+                            />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

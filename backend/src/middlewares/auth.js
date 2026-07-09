@@ -10,10 +10,10 @@ export const generateAccessToken = (user) => {
   );
 };
 
-// Generar Refresh Token (Larga duración: 1 day)
+// Generar Refresh Token (Larga duración: 8h)
 export const generateRefreshToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: "1d",
+    expiresIn: "8h",
   });
 };
 

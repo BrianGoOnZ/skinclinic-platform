@@ -11,6 +11,13 @@ const User = sequelize.define(
       autoIncrement: true,
       field: "user_id", // Mapea correctamente a user_id de la BD
     },
+    publicId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+      unique: true,
+      field: "public_id", // Mapea correctamente a public_id de la BD
+    },
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,

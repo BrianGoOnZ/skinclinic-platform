@@ -46,14 +46,12 @@ export const register = async (req, res) => {
       emergencyContactName,
       emergencyContactPhone,
       medicalInsuranceNumber,
-      mustChangePassword: true, // Forzamos que sea true, aunque ya es su default
+      mustChangePassword: true,
     });
 
-    // IMPORTANTE: Devolvemos la contraseña temporal en la respuesta
-    // Solo se verá esta vez en pantalla para que el administrador se la dé al colaborador
     res.status(201).json({
       message: "User registered successfully",
-      temporaryPassword, // <--- ¡Ojo aquí para copiarla en Postman!
+      temporaryPassword,
       user: {
         id: newUser.id,
         name: newUser.name,
@@ -95,7 +93,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 8 * 60 * 60 * 1000,
     };
 
     res.cookie("accessToken", accessToken, {
@@ -108,7 +106,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: {
-        id: user.id,
+        id: user.publicId,
         name: user.name,
         role: user.role,
         mustChangePassword: user.mustChangePassword,
@@ -194,19 +192,31 @@ export const changePassword = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "name", "email", "role", "mustChangePassword"],
+      attributes: [
+        "id",
+        "publicId",
+        "name",
+        "email",
+        "role",
+        "mustChangePassword",
+      ],
     });
-
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "Usuario no encontrado" });
-    }
 
-    res.status(200).json({ user });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error al verificar la sesión",
-      error: error.message,
+    res.status(200).json({
+      user: {
+        id: user.publicId,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
     });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error al verificar la sesión", error: error.message });
   }
 };
 
