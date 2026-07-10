@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import api from "../services/api";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+} from "../utils/alerts";
 
 const initialFormState = {
   name: "",
@@ -23,12 +29,20 @@ const QuickCustomerModal = ({ isOpen, onClose, onCreated }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    showLoading("Registrando cliente...");
+
     try {
       const response = await api.post("/customers/create", formData);
+      closeAlert();
+      showSuccess("Cliente registrado");
       onCreated(response.data);
       setFormData(initialFormState);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al registrar el cliente");
+      closeAlert();
+      const msg =
+        err.response?.data?.message || "Error al registrar el cliente";
+      setError(msg);
+      showError("Error", msg);
     } finally {
       setLoading(false);
     }
@@ -116,6 +130,7 @@ const QuickCustomerModal = ({ isOpen, onClose, onCreated }) => {
           <button
             type="button"
             onClick={handleSubmit}
+            disabled={loading}
             className="mt-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-sm disabled:opacity-50"
           >
             {loading ? "Guardando..." : "Registrar y Seleccionar"}

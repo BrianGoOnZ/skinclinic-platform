@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import { LuSearch, LuPlus, LuPencil, LuRefreshCw } from "react-icons/lu";
+import { LuSearch, LuPlus, LuPencil } from "react-icons/lu";
 import NewEmployeeModal from "../components/NewEmployeeModal";
+import {
+  showConfirm,
+  showLoading,
+  closeAlert,
+  showToast,
+  showError,
+} from "../utils/alerts";
 
 const Employees = ({ currentUserRole }) => {
   const [employees, setEmployees] = useState([]);
@@ -58,15 +65,34 @@ const Employees = ({ currentUserRole }) => {
   };
 
   const handleToggleActive = async (emp) => {
+    const willDeactivate = emp.is_active;
+    const confirmed = await showConfirm({
+      title: willDeactivate
+        ? "¿Desactivar colaborador?"
+        : "¿Reactivar colaborador?",
+      text: `${emp.name} ${willDeactivate ? "no podrá acceder al sistema" : "recuperará su acceso"}.`,
+      icon: "warning",
+      confirmButtonText: willDeactivate ? "Sí, desactivar" : "Sí, reactivar",
+    });
+    if (!confirmed) return;
+
     setTogglingId(emp.user_id);
+    showLoading("Actualizando estado...");
     try {
-      if (emp.is_active) {
+      if (willDeactivate) {
         await api.patch(`/auth/usuarios/${emp.user_id}/delete`);
       } else {
         await api.patch(`/auth/usuarios/${emp.user_id}/reactivate`);
       }
       await fetchEmployees();
+      closeAlert();
+      showToast(
+        "success",
+        willDeactivate ? "Colaborador desactivado" : "Colaborador reactivado",
+      );
     } catch (err) {
+      closeAlert();
+      showError("Error", "No se pudo actualizar el estado del colaborador");
       console.error(err);
     } finally {
       setTogglingId(null);
@@ -81,15 +107,6 @@ const Employees = ({ currentUserRole }) => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      <div className="flex justify-end">
-        <button
-          onClick={fetchEmployees}
-          className="flex items-center justify-center gap-2 px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer"
-        >
-          <LuRefreshCw size={14} /> Sincronizar Datos
-        </button>
-      </div>
-
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-md">
           <LuSearch

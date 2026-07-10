@@ -2,6 +2,13 @@ import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import { LuSearch, LuPlus, LuPencil } from "react-icons/lu";
 import AddCustomerModal from "../components/AddCustomerModal";
+import {
+  showConfirm,
+  showLoading,
+  closeAlert,
+  showToast,
+  showError,
+} from "../utils/alerts";
 
 const CustomersPage = ({ currentUserRole }) => {
   const isAdmin = currentUserRole === "Administrador";
@@ -47,15 +54,32 @@ const CustomersPage = ({ currentUserRole }) => {
   };
 
   const handleToggleActive = async (customer) => {
+    const willDeactivate = customer.isActive;
+    const confirmed = await showConfirm({
+      title: willDeactivate ? "¿Desactivar cliente?" : "¿Reactivar cliente?",
+      text: willDeactivate
+        ? `${customer.name} dejará de aparecer disponible para agendar nuevas citas. Su expediente e historial no se eliminan y podrás reactivarlo cuando quieras.`
+        : `${customer.name} volverá a estar disponible para agendar citas. Su expediente e historial se mantienen sin cambios.`,
+    });
+    if (!confirmed) return;
+
     setTogglingId(customer.customerId);
+    showLoading("Actualizando estado...");
     try {
-      if (customer.isActive) {
+      if (willDeactivate) {
         await api.patch(`/customers/${customer.customerId}/delete`);
       } else {
         await api.patch(`/customers/${customer.customerId}/reactivate`);
       }
       await fetchCustomers();
+      closeAlert();
+      showToast(
+        "success",
+        willDeactivate ? "Cliente desactivado" : "Cliente reactivado",
+      );
     } catch (err) {
+      closeAlert();
+      showError("Error", "No se pudo actualizar el estado del cliente");
       console.error(err);
     } finally {
       setTogglingId(null);

@@ -1,5 +1,11 @@
 import { useState } from "react";
 import api from "../services/api";
+import {
+  showLoading,
+  closeAlert,
+  showError,
+  showSuccess,
+} from "../utils/alerts";
 
 const LoginSPA = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -17,21 +23,25 @@ const LoginSPA = ({ onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    showLoading("Verificando credenciales...");
 
     try {
       const response = await api.post("/auth/login", { email, password });
-      console.log("¡Login exitoso!", response.data);
-
       const loggedUser = response.data.user;
       setUser(loggedUser);
+      closeAlert();
 
       if (loggedUser.mustChangePassword) {
         setMustChangePass(true);
       } else {
+        showSuccess("¡Bienvenida!", `Hola, ${loggedUser.name}`);
         onLoginSuccess(loggedUser);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Credenciales incorrectas");
+      closeAlert();
+      const msg = err.response?.data?.message || "Credenciales incorrectas";
+      setError(msg);
+      showError("No se pudo iniciar sesión", msg);
     }
   };
 
@@ -43,21 +53,24 @@ const LoginSPA = ({ onLoginSuccess }) => {
       setPassError("Las contraseñas no coinciden");
       return;
     }
-
     if (newPassword.length < 6) {
       setPassError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
+    showLoading("Actualizando contraseña...");
     try {
       await api.post("/auth/change-password", { newPassword });
-
+      closeAlert();
+      showSuccess("Contraseña actualizada");
       setMustChangePass(false);
       onLoginSuccess({ ...user, mustChangePassword: false });
     } catch (err) {
-      setPassError(
-        err.response?.data?.message || "Error al actualizar la contraseña",
-      );
+      closeAlert();
+      const msg =
+        err.response?.data?.message || "Error al actualizar la contraseña";
+      setPassError(msg);
+      showError("Error", msg);
     }
   };
 

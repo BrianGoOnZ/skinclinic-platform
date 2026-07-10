@@ -7,6 +7,12 @@ import {
   APPOINTMENT_STATUSES,
   STATUS_META,
 } from "../constants/appointmentStatus";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+} from "../utils/alerts";
 
 const initialFormState = {
   marca: "Modelha DK",
@@ -163,6 +169,7 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
 
     setLoading(true);
     setError("");
+    showLoading(isEditMode ? "Guardando cita..." : "Agendando cita...");
 
     try {
       if (isEditMode) {
@@ -178,17 +185,21 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
       } else {
         await api.post("/appointments", buildPayload(force));
       }
+      closeAlert();
+      showSuccess(isEditMode ? "Cita actualizada" : "Cita agendada");
       onRefresh();
       onClose();
     } catch (err) {
+      closeAlert();
       if (err.response?.status === 409) {
         setConflictToConfirm(err.response.data.conflict);
         setShowOverrideModal(true);
       } else {
-        setError(
+        const msg =
           err.response?.data?.message ||
-            `Error al ${isEditMode ? "actualizar" : "agendar"} la cita`,
-        );
+          `Error al ${isEditMode ? "actualizar" : "agendar"} la cita`;
+        setError(msg);
+        showError("Error", msg);
       }
     } finally {
       setLoading(false);

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { LuX, LuPlus, LuTrash2 } from "react-icons/lu";
 import api from "../services/api";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+} from "../utils/alerts";
 
 const initialFormState = {
   brand: "Modelha DK",
@@ -74,6 +80,7 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    showLoading(isEditMode ? "Guardando servicio..." : "Creando servicio...");
 
     const payload = {
       ...formData,
@@ -88,13 +95,17 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
       } else {
         await api.post("/services", payload);
       }
+      closeAlert();
+      showSuccess(isEditMode ? "Servicio actualizado" : "Servicio creado");
       onRefresh();
       onClose();
     } catch (err) {
-      setError(
+      closeAlert();
+      const msg =
         err.response?.data?.message ||
-          `Error al ${isEditMode ? "actualizar" : "registrar"} el servicio`,
-      );
+        `Error al ${isEditMode ? "actualizar" : "registrar"} el servicio`;
+      setError(msg);
+      showError("Error", msg);
     } finally {
       setLoading(false);
     }

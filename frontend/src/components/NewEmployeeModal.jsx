@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { LuX, LuCopy, LuCheck, LuUserPlus } from "react-icons/lu";
 import api from "../services/api";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+} from "../utils/alerts";
 
 const emptyFormState = {
   name: "",
@@ -73,6 +79,9 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh, employee }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    showLoading(
+      isEditMode ? "Guardando cambios..." : "Registrando colaborador...",
+    );
 
     const payload = {
       name: formData.name,
@@ -91,6 +100,8 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh, employee }) => {
     try {
       if (isEditMode) {
         await api.put(`/auth/usuarios/${employee.user_id}`, payload);
+        closeAlert();
+        showSuccess("Colaborador actualizado");
         if (onRefresh) onRefresh();
         handleCloseAndReset();
       } else {
@@ -98,18 +109,19 @@ const NewEmployeeModal = ({ isOpen, onClose, onRefresh, employee }) => {
           ...payload,
           password: "",
         });
-
+        closeAlert();
         if (response.status === 201) {
           setGeneratedPassword(response.data.temporaryPassword);
           if (onRefresh) onRefresh();
         }
       }
     } catch (err) {
-      console.error(err);
-      setError(
+      closeAlert();
+      const msg =
         err.response?.data?.message ||
-          `Error interno al ${isEditMode ? "actualizar" : "registrar"} colaborador.`,
-      );
+        `Error interno al ${isEditMode ? "actualizar" : "registrar"} colaborador.`;
+      setError(msg);
+      showError("Error", msg);
     } finally {
       setLoading(false);
     }

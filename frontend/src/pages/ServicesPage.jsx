@@ -9,6 +9,14 @@ import {
 } from "react-icons/lu";
 import ServiceModal from "../components/ServiceModal";
 import { LuCheck } from "react-icons/lu";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+  showConfirm,
+  showToast,
+} from "../utils/alerts";
 
 const BRAND_COLORS = {
   "Modelha DK": "#197e88",
@@ -54,16 +62,30 @@ const ServicesPage = ({ currentUserRole }) => {
   };
 
   const handleToggleActive = async (service) => {
+    const willDeactivate = service.isActive;
+    const confirmed = await showConfirm({
+      title: willDeactivate ? "¿Desactivar servicio?" : "¿Reactivar servicio?",
+      text: service.name,
+    });
+    if (!confirmed) return;
+
     setTogglingId(service.serviceId);
+    showLoading("Actualizando estado...");
     try {
-      if (service.isActive) {
+      if (willDeactivate) {
         await api.patch(`/services/${service.serviceId}/delete`);
       } else {
         await api.patch(`/services/${service.serviceId}/reactivate`);
       }
       await fetchServices();
+      closeAlert();
+      showToast(
+        "success",
+        willDeactivate ? "Servicio desactivado" : "Servicio reactivado",
+      );
     } catch (err) {
-      console.error(err);
+      closeAlert();
+      showError("Error", "No se pudo actualizar el estado del servicio");
     } finally {
       setTogglingId(null);
     }
@@ -81,31 +103,31 @@ const ServicesPage = ({ currentUserRole }) => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      {isAdmin && (
-        <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-wrap gap-2">
+          {["Todos", "Modelha DK", "Depilclinik"].map((brand) => (
+            <button
+              key={brand}
+              onClick={() => setBrandFilter(brand)}
+              className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                brandFilter === brand
+                  ? "bg-primary text-white border-primary"
+                  : "border-borderClinik text-primary hover:bg-gray-50"
+              }`}
+            >
+              {brand}
+            </button>
+          ))}
+        </div>
+
+        {isAdmin && (
           <button
             onClick={handleOpenCreate}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
           >
             <LuPlus size={14} /> Nuevo Servicio
           </button>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {["Todos", "Modelha DK", "Depilclinik"].map((brand) => (
-          <button
-            key={brand}
-            onClick={() => setBrandFilter(brand)}
-            className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
-              brandFilter === brand
-                ? "bg-primary text-white border-primary"
-                : "border-borderClinik text-primary hover:bg-gray-50"
-            }`}
-          >
-            {brand}
-          </button>
-        ))}
+        )}
       </div>
 
       {loading ? (

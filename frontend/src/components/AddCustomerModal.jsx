@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import {
+  showLoading,
+  closeAlert,
+  showSuccess,
+  showError,
+} from "../utils/alerts";
 
 const initialFormState = {
   name: "",
@@ -53,6 +59,7 @@ const AddCustomerModal = ({ isOpen, onClose, onRefresh, customer }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    showLoading(isEditMode ? "Guardando cambios..." : "Registrando cliente...");
 
     try {
       if (isEditMode) {
@@ -60,13 +67,17 @@ const AddCustomerModal = ({ isOpen, onClose, onRefresh, customer }) => {
       } else {
         await api.post("/customers/create", formData);
       }
+      closeAlert();
+      showSuccess(isEditMode ? "Cliente actualizado" : "Cliente registrado");
       onRefresh();
       onClose();
     } catch (err) {
-      setError(
+      closeAlert();
+      const msg =
         err.response?.data?.message ||
-          `Error al ${isEditMode ? "actualizar" : "registrar"} el cliente`,
-      );
+        `Error al ${isEditMode ? "actualizar" : "registrar"} el cliente`;
+      setError(msg);
+      showError("Error", msg);
     } finally {
       setLoading(false);
     }

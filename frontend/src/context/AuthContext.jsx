@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
+import {
+  showConfirm,
+  showLoading,
+  closeAlert,
+  showError,
+} from "../utils/alerts";
 
 const AuthContext = createContext(null);
 
@@ -25,10 +31,22 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => setUser(userData);
 
   const logout = async () => {
+    const confirmed = await showConfirm({
+      title: "¿Cerrar sesión?",
+      text: "Tendrás que iniciar sesión nuevamente para continuar.",
+      icon: "question",
+      confirmButtonText: "Sí, cerrar sesión",
+    });
+
+    if (!confirmed) return;
+
+    showLoading("Cerrando sesión...");
     try {
       await api.post("/auth/logout");
+      closeAlert();
     } catch (err) {
-      console.error("Error al cerrar sesión:", err);
+      closeAlert();
+      showError("Error", "No se pudo cerrar la sesión correctamente");
     } finally {
       setUser(null);
     }
