@@ -4,8 +4,8 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 
 ## Tabla de Contenidos
 
-- [Stack Tecnológico](#-stack-tecnológico)
-- [Arquitectura](#-arquitectura)
+- [Stack Tecnológico](##-stack-tecnológico)
+- [Arquitectura](##-arquitectura)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
 - [Requisitos Previos](#-requisitos-previos)
 - [Instalación y Puesta en Marcha](#-instalación-y-puesta-en-marcha)
