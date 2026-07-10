@@ -4,20 +4,18 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 
 ## Tabla de Contenidos
 
-- [Stack Tecnológico](##-stack-tecnológico)
-- [Arquitectura](##-arquitectura)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Requisitos Previos](#-requisitos-previos)
-- [Instalación y Puesta en Marcha](#-instalación-y-puesta-en-marcha)
-- [Variables de Entorno](#-variables-de-entorno)
-- [Módulos Funcionales](#-módulos-funcionales)
-- [Roles y Permisos](#-roles-y-permisos)
-- [Autenticación](#-autenticación)
-- [Scripts Disponibles](#-scripts-disponibles)
-- [Convenciones de Código](#-convenciones-de-código)
-- [Roadmap](#-roadmap)
-
-## Stack Tecnológico
+- [Stack Tecnológico](#stack-tecnológico)
+- [Arquitectura](#arquitectura)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación y Puesta en Marcha](#instalación-y-puesta-en-marcha)
+- [Variables de Entorno](#variables-de-entorno)
+- [Módulos Funcionales](#módulos-funcionales)
+- [Roles y Permisos](#roles-y-permisos)
+- [Autenticación](#autenticación)
+- [Scripts Disponibles](#scripts-disponibles)
+- [Convenciones de Código](#convenciones-de-código)
+- [Roadmap](#roadmap)
 
 **Frontend**
 - React 19 + Vite
