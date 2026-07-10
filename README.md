@@ -17,6 +17,8 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 - [Convenciones de Código](#convenciones-de-código)
 - [Roadmap](#roadmap)
 
+## Stack Tecnológico
+
 **Frontend**
 - React 19 + Vite
 - Tailwind CSS 4
