@@ -6,11 +6,26 @@ import {
   LuUser,
   LuUsers,
   LuCreditCard,
-  LuSettings,
   LuLogOut,
 } from "react-icons/lu";
 
-const Sidebar = ({ activeView, setActiveView, onLogout, userRole }) => {
+const getInitials = (name) => {
+  if (!name) return "U";
+  const words = name.trim().split(" ");
+  return words
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+const Sidebar = ({
+  activeView,
+  setActiveView,
+  onLogout,
+  userRole,
+  userName,
+}) => {
   const menuItems = [
     {
       id: "dashboard",
@@ -40,13 +55,21 @@ const Sidebar = ({ activeView, setActiveView, onLogout, userRole }) => {
 
   return (
     <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0">
-      <div className="p-6 flex items-center justify-start">
-        <span className="text-xl font-black tracking-wider text-secondary flex items-center gap-1">
-          DEP<span className="text-primary font-light">I</span>L CLINIK
-        </span>
+      <div className="px-6 py-6 flex flex-col items-center text-center gap-2 border-b border-gray-50 bg-gradient-to-br from-secondary/10 via-white to-depil/10">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-lg shadow-md">
+          {getInitials(userName)}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-primary truncate max-w-[180px]">
+            {userName || "Usuario"}
+          </p>
+          <p className="text-[11px] font-bold text-gold uppercase tracking-wide mt-0.5">
+            {userRole || "Colaborador"}
+          </p>
+        </div>
       </div>
 
-      <nav className="flex-1 px-4 py-2 flex flex-col gap-1">
+      <nav className="flex-1 px-4 py-4 flex flex-col gap-1 overflow-y-auto">
         {visibleItems.map((item) => {
           const isActive = activeView === item.id;
           return (
@@ -55,32 +78,20 @@ const Sidebar = ({ activeView, setActiveView, onLogout, userRole }) => {
               onClick={() => setActiveView(item.id)}
               className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-left ${
                 isActive
-                  ? "bg-primary text-white shadow-md shadow-primary/10"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-primary"
+                  ? "bg-gradient-to-r from-secondary to-depil text-white shadow-md shadow-depil/20"
+                  : "text-gray-500 hover:bg-secondary/5 hover:text-secondary"
               }`}
             >
-              <span>{item.icon}</span>
+              <span className={isActive ? "text-white" : "text-accent"}>
+                {item.icon}
+              </span>
               <span>{item.label}</span>
             </div>
           );
         })}
       </nav>
 
-      <div className="p-4 flex flex-col gap-1 border-t border-gray-50">
-        <div
-          onClick={() => setActiveView("ajustes")}
-          className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-left ${
-            activeView === "ajustes"
-              ? "bg-primary text-white"
-              : "text-gray-500 hover:bg-gray-50 hover:text-primary"
-          }`}
-        >
-          <span>
-            <LuSettings size={20} />
-          </span>
-          <span>Ajustes</span>
-        </div>
-
+      <div className="p-4 border-t border-gray-50">
         <div
           onClick={onLogout}
           className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-left text-gray-500 hover:bg-red-50 hover:text-red-600"

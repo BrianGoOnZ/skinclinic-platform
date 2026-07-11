@@ -12,7 +12,6 @@ const PAGE_TITLES = {
   agenda: "Agenda",
   servicios: "Catálogo de Servicios",
   ingresos: "Ingresos",
-  ajustes: "Ajustes",
 };
 
 const DashboardPage = ({ user, onLogout }) => {
@@ -72,16 +71,17 @@ const DashboardPage = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-[#f4f8f9] text-gray-800 font-sans antialiased">
+    <div className="min-h-screen w-full flex bg-[#eef2f5] text-gray-800 font-sans antialiased">
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
         onLogout={onLogout}
         userRole={user?.role}
+        userName={user?.name}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar userName={user?.name} pageTitle={PAGE_TITLES[activeView]} />
+        <Navbar pageTitle={PAGE_TITLES[activeView]} />
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {renderContent()}
         </main>
