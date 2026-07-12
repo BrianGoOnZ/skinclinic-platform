@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* stylelint-disable */
-:root {
+@theme {
   --color-primary: #012438;
   --color-secondary: #197e88;
   --color-accent: #5b9fa6;
@@ -10,8 +10,14 @@
   --color-depil-soft: #fbe4f0;
   --color-gold: #c99a4a;
   --color-coral: #e8746a;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 /* stylelint-enable */
+
+body {
+  font-family: var(--font-sans);
+}
 
 @keyframes float-blob-a {
   0%,
@@ -92,4 +98,48 @@
     var(--month-accent, var(--color-secondary)) 12%,
     white
   ) !important;
+}
+
+/* Botones del toolbar del calendario: menos cuadrados, más vivos */
+.month-themed-calendar .rbc-toolbar button {
+  border-radius: 0.65rem;
+  padding: 0.45rem 0.9rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+  background-color: white;
+}
+
+.month-themed-calendar .rbc-toolbar button:hover:not(.rbc-active) {
+  background-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 10%,
+    white
+  );
+}
+
+.month-themed-calendar .rbc-btn-group {
+  gap: 0.4rem;
+}
+
+.month-themed-calendar .rbc-btn-group button {
+  border-radius: 0.65rem !important;
+  border-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 35%,
+    white
+  ) !important;
+}
+
+.month-themed-calendar .rbc-btn-group + .rbc-btn-group {
+  margin-left: 0.5rem;
+}
+
+.month-themed-calendar .rbc-active {
+  box-shadow: 0 2px 8px
+    color-mix(
+      in srgb,
+      var(--month-accent, var(--color-secondary)) 40%,
+      transparent
+    );
 }

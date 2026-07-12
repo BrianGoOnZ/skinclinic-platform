@@ -10,12 +10,13 @@ const Navbar = ({ pageTitle }) => {
 
       <div className="text-left">
         {isDashboard ? (
-          <span className="text-xl font-black tracking-wider text-primary flex items-center gap-1.5">
+          <span className="text-2xl font-black tracking-wider text-primary font-heading leading-none flex items-center gap-1.5">
             DEPILCLINIK
-            <span className="w-1.5 h-1.5 rounded-full bg-gold" />
           </span>
         ) : (
-          <h2 className="text-xl font-bold text-primary">{pageTitle}</h2>
+          <h2 className="text-2xl font-bold text-primary font-heading leading-none">
+            {pageTitle}
+          </h2>
         )}
       </div>
 

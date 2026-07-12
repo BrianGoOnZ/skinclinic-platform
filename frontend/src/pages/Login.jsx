@@ -204,7 +204,6 @@ const LoginSPA = ({ onLoginSuccess }) => {
                   </div>
                   <h2 className="text-xl font-black tracking-widest text-depil uppercase mt-2 flex items-center gap-1">
                     Iniciar Sesión
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold" />
                   </h2>
                 </div>
 
