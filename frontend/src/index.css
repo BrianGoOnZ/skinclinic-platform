@@ -10,3 +10,84 @@
   --color-gold: #c99a4a;
   --color-coral: #e8746a;
 }
+
+@keyframes float-blob-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+}
+
+@keyframes float-blob-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-30px, 25px) scale(1.05);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tematiza el calendario (react-big-calendar) según el color del mes activo */
+.month-themed-calendar .rbc-toolbar {
+  background-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 10%,
+    white
+  );
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.month-themed-calendar .rbc-toolbar-label {
+  color: var(--month-accent, var(--color-primary));
+  font-weight: 800;
+}
+
+.month-themed-calendar .rbc-btn-group button {
+  border-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 35%,
+    white
+  ) !important;
+}
+
+.month-themed-calendar .rbc-btn-group button.rbc-active {
+  background-color: var(--month-accent, var(--color-secondary)) !important;
+  border-color: var(--month-accent, var(--color-secondary)) !important;
+  color: #fff !important;
+}
+
+.month-themed-calendar .rbc-month-view .rbc-header {
+  background-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 16%,
+    white
+  );
+  color: var(--month-accent, var(--color-primary));
+  font-weight: 700;
+  padding: 0.6rem 0;
+}
+
+.month-themed-calendar .rbc-today {
+  background-color: color-mix(
+    in srgb,
+    var(--month-accent, var(--color-secondary)) 12%,
+    white
+  ) !important;
+}

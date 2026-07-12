@@ -25,6 +25,23 @@ const BRAND_COLORS = {
   Depilclinik: "#c026d3",
 };
 
+// Un color representativo por mes (Ene -> Dic), tono clinico/spa, no forma
+// parte de la paleta global de la marca: solo tematiza el calendario.
+const MONTH_ACCENTS = [
+  "#5b7fa6", // Enero
+  "#c0247d", // Febrero
+  "#7a9e7e", // Marzo
+  "#9b7fb8", // Abril
+  "#e8746a", // Mayo
+  "#197e88", // Junio
+  "#c99a4a", // Julio
+  "#c1694a", // Agosto
+  "#8a5a7a", // Septiembre
+  "#b8622f", // Octubre
+  "#4a5a8a", // Noviembre
+  "#2f7a5e", // Diciembre
+];
+
 const Agenda = ({ currentUserRole }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +53,7 @@ const Agenda = ({ currentUserRole }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const isAdmin = currentUserRole === "Administrador";
+  const monthAccent = MONTH_ACCENTS[currentDate.getMonth()];
 
   const fetchAppointments = async () => {
     try {
@@ -97,31 +115,21 @@ const Agenda = ({ currentUserRole }) => {
   return (
     <div className="flex flex-col gap-6 w-full text-left">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-accent">
-          <span className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-5 text-sm font-semibold text-primary">
+          <span className="flex items-center gap-2">
             <span
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-3.5 h-3.5 rounded-full"
               style={{ backgroundColor: BRAND_COLORS["Modelha DK"] }}
             />
             Modelha DK
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-2">
             <span
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-3.5 h-3.5 rounded-full"
               style={{ backgroundColor: BRAND_COLORS["Depilclinik"] }}
             />
             Depilclinik
           </span>
-          <span className="w-px h-3 bg-borderClinik" />
-          {Object.entries(STATUS_META).map(([status, meta]) => (
-            <span key={status} className="flex items-center gap-1.5">
-              <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: meta.color }}
-              />
-              {meta.label}
-            </span>
-          ))}
         </div>
 
         {isAdmin && (
@@ -134,7 +142,10 @@ const Agenda = ({ currentUserRole }) => {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+      <div
+        className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 month-themed-calendar"
+        style={{ "--month-accent": monthAccent }}
+      >
         {loading ? (
           <p className="text-secondary text-center font-medium p-8 text-sm">
             Cargando agenda...

@@ -10,7 +10,6 @@ import {
 const LoginSPA = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const [user, setUser] = useState(null);
@@ -74,177 +73,218 @@ const LoginSPA = ({ onLoginSuccess }) => {
     }
   };
 
-  if (mustChangePass) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
-        <div className="bg-white w-full max-w-[450px] rounded-2xl p-8 shadow-2xl text-left">
-          <h1 className="text-2xl font-bold text-primary mb-2 text-center">
-            Actualizar Contraseña
-          </h1>
-          <p className="text-sm text-accent mb-6 text-center">
-            Por seguridad, debes cambiar tu contraseña temporal antes de
-            continuar.
-          </p>
-
-          {passError && (
-            <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
-              {passError}
-            </p>
-          )}
-
-          <form
-            onSubmit={handlePasswordChangeSubmit}
-            className="flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Nueva Contraseña
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-primary">
-                Confirmar Contraseña
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full mt-2 p-2.5 rounded-lg bg-secondary text-white text-sm font-bold hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
-            >
-              Guardar y Acceder
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-primary p-4">
-      <div className="bg-white w-full max-w-[450px] rounded-2xl p-8 shadow-2xl text-left">
-        <h1 className="text-2xl font-bold text-primary mb-1 text-center">
-          Iniciar Sesión
-        </h1>
-        <p className="text-sm text-accent mb-6 text-center">
-          Ingresa tus credenciales para acceder
-        </p>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-tr from-[#e7f2f3] via-[#f4f8f9] to-[#fbe9f1] p-4 relative overflow-hidden">
+      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[100px] pointer-events-none animate-[float-blob-a_9s_ease-in-out_infinite]" />
+      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-depil-soft/70 rounded-full blur-[100px] pointer-events-none animate-[float-blob-b_11s_ease-in-out_infinite]" />
 
-        {error && (
-          <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
-            {error}
-          </p>
-        )}
+      <div className="bg-white w-full max-w-[850px] min-h-[500px] rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden relative z-10 border border-white/60 text-left animate-[card-in_0.6s_ease-out]">
+        <div className="w-full md:w-[40%] bg-gradient-to-br from-depil to-primary text-white p-8 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white via-transparent to-black transform -skew-x-12 origin-top-left scale-150" />
+            <div className="absolute -top-20 -left-20 w-80 h-80 border-4 border-white rounded-3xl transform rotate-45" />
+            <div className="absolute -top-10 -left-10 w-80 h-80 border-4 border-white rounded-3xl transform rotate-12" />
+          </div>
 
-        <button
-          type="button"
-          className="w-full flex items-center justify-center gap-3 p-2.5 border border-borderClinik rounded-lg text-sm font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer mb-5"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18">
-            <path
-              fill="#4285F4"
-              d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.7v2.24h2.91c1.7-1.57 2.69-3.88 2.69-6.57z"
-            />
-            <path
-              fill="#34A853"
-              d="M9 18c2.43 0 4.47-.8 5.96-2.23l-2.91-2.24c-.8.54-1.84.87-3.05.87-2.34 0-4.33-1.58-5.03-3.71H.95v2.3A9 9 0 0 0 9 18z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M3.97 10.69A5.409 5.409 0 0 1 3.66 9c0-.59.1-1.17.29-1.69V5.01H.95A8.991 8.991 0 0 0 0 9c0 1.49.36 2.91.95 4.19l3.02-2.5z"
-            />
-            <path
-              fill="#EA4335"
-              d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.05A8.94 8.94 0 0 0 9 0 8.991 8.991 0 0 0 .95 5.01l3.02 2.52c.7-2.13 2.69-3.71 5.02-3.71z"
-            />
-          </svg>
-          Ingresar con Google
-        </button>
+          <div className="relative z-10 flex flex-col items-start gap-2 mt-16 w-full">
+            <span className="text-2xl font-black tracking-widest">
+              DEPILCLINIK
+            </span>
+            <span className="text-xs text-white/70 font-medium">
+              Panel administrativo
+            </span>
+          </div>
 
-        <div className="flex items-center my-5">
-          <div className="flex-1 border-t border-gray-200"></div>
-          <span className="px-3 text-xs text-accent font-medium">ó</span>
-          <div className="flex-1 border-t border-gray-200"></div>
+          <div className="relative z-10 text-xs text-white/60 tracking-wide mt-auto text-center md:text-left">
+            DEPILCLINIK © 2026
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-primary">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              placeholder="ejemplo@correo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
-            />
+        <div className="w-full md:w-[60%] p-8 md:p-12 flex flex-col justify-center bg-white">
+          <div className="w-full">
+            {mustChangePass ? (
+              <>
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-depil-soft flex items-center justify-center border border-depil/20">
+                    <svg
+                      className="w-8 h-8 text-depil"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-black tracking-widest text-depil uppercase mt-2 flex items-center gap-1">
+                    Actualizar Contraseña
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                  </h2>
+                  <p className="text-xs text-accent text-center mt-2 max-w-xs">
+                    Por seguridad, debes cambiar tu contraseña temporal antes de
+                    continuar.
+                  </p>
+                </div>
+
+                {passError && (
+                  <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
+                    {passError}
+                  </p>
+                )}
+
+                <form
+                  onSubmit={handlePasswordChangeSubmit}
+                  className="flex flex-col gap-6"
+                >
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="newPassword"
+                      className="text-xs font-bold text-primary"
+                    >
+                      Nueva Contraseña
+                    </label>
+                    <input
+                      id="newPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="text-xs font-bold text-primary"
+                    >
+                      Confirmar Contraseña
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full mt-2 p-2.5 rounded-full bg-gradient-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer shadow-md uppercase tracking-wider"
+                  >
+                    Guardar y Acceder
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-depil-soft flex items-center justify-center border border-depil/20">
+                    <svg
+                      className="w-8 h-8 text-depil"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-black tracking-widest text-depil uppercase mt-2 flex items-center gap-1">
+                    Iniciar Sesión
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                  </h2>
+                </div>
+
+                {error && (
+                  <p className="text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-center border border-red-200">
+                    {error}
+                  </p>
+                )}
+
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                  <div className="relative z-20 flex items-center gap-3 border-b border-borderClinik pb-2 group focus-within:border-secondary transition-colors">
+                    <svg
+                      className="w-5 h-5 text-accent group-focus-within:text-secondary transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"
+                      />
+                    </svg>
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      aria-label="Correo Electrónico"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full bg-transparent text-sm text-primary focus:outline-none placeholder-accent/70"
+                    />
+                  </div>
+
+                  <div className="relative z-20 flex items-center gap-3 border-b border-borderClinik pb-2 group focus-within:border-secondary transition-colors">
+                    <svg
+                      className="w-5 h-5 text-accent group-focus-within:text-secondary transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      aria-label="Contraseña"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full bg-transparent text-sm text-primary focus:outline-none placeholder-accent/70"
+                    />
+                  </div>
+
+                  <div className="relative z-20 flex items-center justify-between text-xs mt-2">
+                    <a
+                      href="#forgot"
+                      className="text-accent font-semibold hover:text-secondary hover:underline transition-colors"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </a>
+
+                    <button
+                      type="submit"
+                      className="px-8 py-2 rounded-full bg-gradient-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-95 shadow-md transition-all transform active:scale-95 cursor-pointer uppercase tracking-wider"
+                    >
+                      Iniciar Sesión
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-primary">Contraseña</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
-            />
-          </div>
-
-          <div className="flex items-center justify-between text-xs mt-1">
-            <label className="flex items-center gap-2 text-primary font-medium cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="accent-secondary h-4 w-4 rounded border-borderClinik"
-              />
-              Recuérdame
-            </label>
-            <a
-              href="#forgot"
-              className="text-secondary font-semibold hover:underline"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full mt-2 p-2.5 rounded-lg bg-secondary text-white text-sm font-bold hover:bg-[#14676f] transition-colors cursor-pointer shadow-md"
-          >
-            Iniciar Sesión
-          </button>
-        </form>
-
-        <p className="text-xs text-center text-accent mt-6">
-          ¿No tienes una cuenta?{" "}
-          <a
-            href="#register"
-            className="text-secondary font-bold hover:underline"
-          >
-            Regístrate aquí
-          </a>
-        </p>
+        </div>
       </div>
     </div>
   );

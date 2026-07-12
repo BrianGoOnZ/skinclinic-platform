@@ -7,8 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // Inside the frontend container, use the Docker service name for backend
-        target: "http://backend:5000",
+        target: process.env.VITE_API_URL || "http://backend:5000",
         changeOrigin: true,
         secure: false,
       },
