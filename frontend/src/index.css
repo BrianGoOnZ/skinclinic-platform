@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* stylelint-disable */
 @theme {
   --color-primary: #012438;
   --color-secondary: #197e88;
@@ -10,6 +11,7 @@
   --color-gold: #c99a4a;
   --color-coral: #e8746a;
 }
+/* stylelint-enable */
 
 @keyframes float-blob-a {
   0%,
