@@ -7,3 +7,4 @@ mysql_data/
 init.sql
 # Ocultar el diagrama local de Draw.io
 *.drawio
+.vscode/settings.json
