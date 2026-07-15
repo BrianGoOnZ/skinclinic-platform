@@ -11,13 +11,13 @@ import {
 import { protect, restrictTo } from "../middlewares/auth.js";
 
 const router = express.Router();
-
-// Todas las rutas del directorio clínico de clientes quedan protegidas
+// El directorio completo de clientes es exclusivo de Administrador,
 router.post("/create", protect, restrictTo("Administrador"), createCustomer);
-router.get("/", protect, getAllCustomers);
-router.get("/search", protect, searchCustomers);
-router.get("/:id", protect, getCustomerById);
+router.get("/", protect, restrictTo("Administrador"), getAllCustomers);
+router.get("/search", protect, restrictTo("Administrador"), searchCustomers);
+router.get("/:id", protect, restrictTo("Administrador"), getCustomerById);
 router.put("/:id", protect, restrictTo("Administrador"), updateCustomer);
+
 router.patch(
   "/:id/delete",
   protect,

@@ -42,7 +42,7 @@ const MONTH_ACCENTS = [
   "#2f7a5e", // Diciembre
 ];
 
-const Agenda = ({ currentUserRole }) => {
+const Agenda = ({ currentUserRole, onAttendAppointment }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -193,6 +193,14 @@ const Agenda = ({ currentUserRole }) => {
         isOpen={Boolean(viewingAppointment)}
         appointment={viewingAppointment}
         onClose={() => setViewingAppointment(null)}
+        onAttend={
+          currentUserRole !== "Administrador"
+            ? (appointmentId) => {
+                setViewingAppointment(null);
+                onAttendAppointment(appointmentId);
+              }
+            : undefined
+        }
       />
     </div>
   );

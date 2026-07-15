@@ -111,20 +111,20 @@ const Employees = ({ currentUserRole }) => {
         <div className="relative flex-1 max-w-md">
           <LuSearch
             size={18}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-accent"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary"
           />
           <input
             type="text"
             placeholder="Buscar Colaborador..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-borderClinik text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-white transition-shadow"
           />
         </div>
 
         {isAdmin && (
           <button
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md self-start sm:self-center"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md self-start sm:self-center"
             onClick={handleOpenCreate}
           >
             <LuPlus size={14} /> Nuevo Colaborador
@@ -149,7 +149,7 @@ const Employees = ({ currentUserRole }) => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70">
+                <tr className="border-b border-gray-100 bg-gradient-to-r from-secondary/5 to-depil/5">
                   <th className="p-4 text-xs font-bold text-primary w-[45%]">
                     Colaborador
                   </th>
@@ -172,7 +172,7 @@ const Employees = ({ currentUserRole }) => {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center text-secondary font-bold text-xs shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-secondary to-depil flex items-center justify-center text-white font-bold text-xs shrink-0">
                           {getInitials(emp.name)}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -189,8 +189,8 @@ const Employees = ({ currentUserRole }) => {
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${
                           emp.rol === "Administrador"
-                            ? "bg-red-50 text-red-700 border border-red-100"
-                            : "bg-blue-50 text-secondary border border-blue-100"
+                            ? "bg-depil-soft text-depil"
+                            : "bg-secondary/10 text-secondary"
                         }`}
                       >
                         {emp.rol}

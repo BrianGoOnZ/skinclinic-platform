@@ -14,7 +14,7 @@ const PAGE_TITLES = {
   ingresos: "Ingresos",
 };
 
-const DashboardPage = ({ user, onLogout }) => {
+const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
   const [activeView, setActiveView] = useState("dashboard");
 
   const renderContent = () => {
@@ -30,10 +30,22 @@ const DashboardPage = ({ user, onLogout }) => {
         return <Employees currentUserRole={user?.role} />;
 
       case "clientes":
+        if (user?.role !== "Administrador") {
+          return (
+            <div className="bg-white rounded-2x1 border border-gray-200 p-8 text-center text-gray-400 text-sm">
+              No tienes permisos para acceder a esta sección.
+            </div>
+          );
+        }
         return <CustomersPage currentUserRole={user?.role} />;
 
       case "agenda":
-        return <Agenda currentUserRole={user?.role} />;
+        return (
+          <Agenda
+            currentUserRole={user?.role}
+            onAttendAppointment={onAttendAppointment}
+          />
+        );
 
       case "servicios":
         return <ServicesPage currentUserRole={user?.role} />;

@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import MedicalAssessment from "./MedicalAssessment.js";
+import LaserMedicalAssessment from "./LaserMedicalAssessment.js";
 
 const Customer = sequelize.define(
   "Customer",
@@ -77,5 +79,23 @@ const Customer = sequelize.define(
     updatedAt: false,
   },
 );
+
+Customer.hasMany(MedicalAssessment, {
+  foreignKey: "customerId",
+  as: "medicalAssessments",
+});
+MedicalAssessment.belongsTo(Customer, {
+  foreignKey: "customerId",
+  as: "customer",
+});
+
+Customer.hasMany(LaserMedicalAssessment, {
+  foreignKey: "customerId",
+  as: "laserAssessments",
+});
+LaserMedicalAssessment.belongsTo(Customer, {
+  foreignKey: "customerId",
+  as: "customer",
+});
 
 export default Customer;

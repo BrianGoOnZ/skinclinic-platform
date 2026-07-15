@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Appointment from "../models/Appointment.js";
 
 // Generar Access Token (Corta duración: 15 min)
 export const generateAccessToken = (user) => {
@@ -56,4 +57,52 @@ export const restrictTo = (...roles) => {
     }
     next();
   };
+};
+
+// Verifica que el usuario pueda atender clínicamente una cita específica:
+// - Administrador: acceso total, sin restricciones.
+// - Colaborador: solo si la cita es suya Y el expediente asociado (si existe)
+//   no está ya bloqueado por haberse guardado antes.
+export const canAttendAppointment = async (req, res, next) => {
+  try {
+    const { appointmentId } = req.params;
+
+    const appointment = await Appointment.findByPk(appointmentId, {
+      include: ["medicalAssessment", "laserAssessment"],
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Cita no encontrada" });
+    }
+
+    if (req.user.role === "Administrador") {
+      req.appointment = appointment;
+      return next();
+    }
+
+    if (appointment.userId !== req.user.id) {
+      return res.status(403).json({
+        message: "Esta cita no está asignada a tu usuario",
+      });
+    }
+
+    const existingAssessment =
+      appointment.marca === "Modelha DK"
+        ? appointment.medicalAssessment
+        : appointment.laserAssessment;
+
+    if (existingAssessment?.lockedForCollaborator) {
+      return res.status(403).json({
+        message: "Este expediente ya fue guardado y no puede volver a abrirse",
+      });
+    }
+
+    req.appointment = appointment;
+    next();
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al validar el acceso a la cita",
+      error: error.message,
+    });
+  }
 };

@@ -34,7 +34,12 @@ const Sidebar = ({
     },
     { id: "servicios", label: "Servicios", icon: <LuBriefcase size={20} /> },
     { id: "agenda", label: "Agenda", icon: <LuCalendarDays size={20} /> },
-    { id: "clientes", label: "Clientes", icon: <LuUser size={20} /> },
+    {
+      id: "clientes",
+      label: "Clientes",
+      icon: <LuUser size={20} />,
+      adminOnly: true,
+    },
     {
       id: "empleados",
       label: "Empleados",

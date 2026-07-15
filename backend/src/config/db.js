@@ -12,9 +12,12 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
     dialect: "mysql",
-    logging: false, // Evita saturar la consola con logs de SQL en desarrollo
+    logging: false,
+    dialectOptions: {
+      charset: "utf8mb4",
+    },
     pool: {
-      max: 5, // Máximo de conexiones simultáneas en el pool
+      max: 5,
       min: 0,
       acquire: 30000,
       idle: 10000,

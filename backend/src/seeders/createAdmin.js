@@ -20,6 +20,7 @@ const run = async () => {
       password: "Temporal123",
       gender: "H",
       role: "Administrador",
+      isActive: true,
       mustChangePassword: true,
     });
 

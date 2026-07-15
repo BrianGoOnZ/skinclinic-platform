@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import DashboardPage from "./pages/Dashboard";
+import ClinicalRecordPage from "./pages/ClinicalRecordPage";
 
 function AppContent() {
   const { user, loading, login, logout } = useAuth();
+  const [attendingAppointmentId, setAttendingAppointmentId] = useState(null);
 
   if (loading) {
     return (
@@ -17,7 +20,23 @@ function AppContent() {
     return <Login onLoginSuccess={login} />;
   }
 
-  return <DashboardPage user={user} onLogout={logout} />;
+  if (attendingAppointmentId) {
+    return (
+      <ClinicalRecordPage
+        appointmentId={attendingAppointmentId}
+        currentUser={user}
+        onExit={() => setAttendingAppointmentId(null)}
+      />
+    );
+  }
+
+  return (
+    <DashboardPage
+      user={user}
+      onLogout={logout}
+      onAttendAppointment={setAttendingAppointmentId}
+    />
+  );
 }
 
 function App() {

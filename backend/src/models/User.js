@@ -1,5 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import MedicalAssessment from "./MedicalAssessment.js";
+import LaserMedicalAssessment from "./LaserMedicalAssessment.js";
+import AssessmentPhoto from "./AssessmentPhoto.js";
 import bcrypt from "bcrypt";
 
 const User = sequelize.define(
@@ -114,5 +117,32 @@ const User = sequelize.define(
 User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+User.hasMany(MedicalAssessment, {
+  foreignKey: "filledByUserId",
+  as: "filledMedicalAssessments",
+});
+MedicalAssessment.belongsTo(User, {
+  foreignKey: "filledByUserId",
+  as: "filledBy",
+});
+
+User.hasMany(LaserMedicalAssessment, {
+  foreignKey: "filledByUserId",
+  as: "filledLaserAssessments",
+});
+LaserMedicalAssessment.belongsTo(User, {
+  foreignKey: "filledByUserId",
+  as: "filledBy",
+});
+
+User.hasMany(AssessmentPhoto, {
+  foreignKey: "uploadedByUserId",
+  as: "uploadedPhotos",
+});
+AssessmentPhoto.belongsTo(User, {
+  foreignKey: "uploadedByUserId",
+  as: "uploadedBy",
+});
 
 export default User;

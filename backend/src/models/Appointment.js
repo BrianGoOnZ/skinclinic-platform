@@ -3,6 +3,8 @@ import sequelize from "../config/db.js";
 import Customer from "./Customer.js";
 import Service from "./Service.js";
 import User from "./User.js";
+import MedicalAssessment from "./MedicalAssessment.js";
+import LaserMedicalAssessment from "./LaserMedicalAssessment.js";
 
 const Appointment = sequelize.define(
   "Appointment",
@@ -53,6 +55,12 @@ const Appointment = sequelize.define(
       allowNull: false,
       defaultValue: "Programada",
     },
+    isNewClientPendingData: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: "is_new_client_pending_data",
+    },
   },
   {
     tableName: "Appointments",
@@ -65,5 +73,23 @@ const Appointment = sequelize.define(
 Appointment.belongsTo(Customer, { foreignKey: "customerId", as: "customer" });
 Appointment.belongsTo(Service, { foreignKey: "serviceId", as: "service" });
 Appointment.belongsTo(User, { foreignKey: "userId", as: "collaborator" });
+
+Appointment.hasOne(MedicalAssessment, {
+  foreignKey: "appointmentId",
+  as: "medicalAssessment",
+});
+MedicalAssessment.belongsTo(Appointment, {
+  foreignKey: "appointmentId",
+  as: "appointment",
+});
+
+Appointment.hasOne(LaserMedicalAssessment, {
+  foreignKey: "appointmentId",
+  as: "laserAssessment",
+});
+LaserMedicalAssessment.belongsTo(Appointment, {
+  foreignKey: "appointmentId",
+  as: "appointment",
+});
 
 export default Appointment;
