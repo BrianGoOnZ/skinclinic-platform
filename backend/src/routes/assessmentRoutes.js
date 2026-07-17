@@ -4,6 +4,7 @@ import {
   getAssessmentHistoryByCustomer,
   getAssessmentByAppointment,
   createAssessment,
+  getAllAssessments,
 } from "../controllers/assessmentController.js";
 import {
   protect,
@@ -28,6 +29,8 @@ router.get(
   restrictTo("Administrador"),
   getAssessmentHistoryByCustomer,
 );
+
+router.get("/all", protect, restrictTo("Administrador"), getAllAssessments);
 
 // Acceso para llenar el expediente de una cita específica
 // (Administrador siempre; Colaborador solo si la cita es suya y no está bloqueada)

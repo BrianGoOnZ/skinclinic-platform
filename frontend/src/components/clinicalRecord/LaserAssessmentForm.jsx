@@ -103,7 +103,7 @@ const LaserAssessmentForm = ({ onSubmit, saving }) => {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
               activeTab === tab
-                ? "bg-gradient-to-r from-depil to-secondary text-white"
+                ? "bg-linear-to-r from-depil to-secondary text-white"
                 : "text-gray-500 hover:bg-gray-50"
             }`}
           >
@@ -304,7 +304,7 @@ const LaserAssessmentForm = ({ onSubmit, saving }) => {
         <button
           onClick={handleSaveClick}
           disabled={saving}
-          className="px-8 py-2.5 rounded-full bg-gradient-to-r from-depil to-secondary text-white font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer shadow-md disabled:opacity-50"
+          className="px-8 py-2.5 rounded-full bg-linear-to-r from-depil to-secondary text-white font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer shadow-md disabled:opacity-50"
         >
           {saving ? "Guardando..." : "Guardar Expediente"}
         </button>

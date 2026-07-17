@@ -6,48 +6,13 @@ import {
   CheckboxGrid,
   RatingSlider,
 } from "./FormField";
+import {
+  PROFESSIONAL_TYPES,
+  DIET_OPTIONS,
+  SKIN_PRACTICES,
+} from "../../constants/clinicalRecordOptions";
 
 const TABS = ["General", "Hábitos", "Padecimientos", "Corporal", "Facial"];
-
-const PROFESSIONAL_TYPES = [
-  { value: "dermatologo", label: "Dermatólogo" },
-  { value: "ginecologo", label: "Ginecólogo" },
-  { value: "endocrinologo", label: "Endocrinólogo" },
-  { value: "psicologo_psiquiatra", label: "Psicólogo / Psiquiatra" },
-  { value: "medico_estetico", label: "Médico Estético" },
-  { value: "cirujano_plastico", label: "Cirujano Plástico" },
-  { value: "cosmetologo", label: "Cosmetólogo" },
-  { value: "fisioterapeuta", label: "Fisioterapeuta" },
-  { value: "nutriologo", label: "Nutriólogo" },
-  { value: "otro", label: "Otro" },
-];
-
-const DIET_OPTIONS = [
-  { value: "refrescos", label: "Refrescos" },
-  { value: "bebidas_energizantes", label: "Bebidas energizantes" },
-  { value: "cafe", label: "Café" },
-  { value: "alcohol", label: "Alcohol" },
-  { value: "pan_dulce_azucar", label: "Pan dulce y Azúcar" },
-  { value: "frituras", label: "Frituras" },
-  { value: "comida_picante", label: "Comida picante" },
-  { value: "lacteos", label: "Lácteos" },
-  { value: "proteina_gimnasio", label: "Proteína gimnasio" },
-  { value: "carnes_rojas", label: "Carnes rojas" },
-  { value: "vegetales", label: "Vegetales" },
-  { value: "almendras_nueces", label: "Almendras / Nueces" },
-  { value: "frutas", label: "Frutas" },
-  { value: "tabaco_vape", label: "Tabaco / Vape" },
-  { value: "cannabis_drogas", label: "Cannabis / Drogas" },
-  { value: "litros_agua_diarios", label: "Litros de agua diarios" },
-];
-
-const SKIN_PRACTICES = [
-  { value: "hidroquinona", label: "Hidroquinona" },
-  { value: "barmicil", label: "Barmicil" },
-  { value: "corticoides", label: "Corticoides" },
-  { value: "remedios_caseros", label: "Remedios caseros" },
-  { value: "otro", label: "Otro" },
-];
 
 const BACKGROUND_ITEMS = [
   { key: "hasDiabetes", label: "Diabetes / prediabetes" },

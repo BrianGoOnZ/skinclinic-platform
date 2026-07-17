@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
-import { LuSearch, LuPlus, LuPencil } from "react-icons/lu";
+import { LuSearch, LuPlus, LuPencil, LuFileText } from "react-icons/lu";
 import AddCustomerModal from "../components/AddCustomerModal";
+import LatestAssessmentPage from "./LatestAssessmentPage";
 import {
   showConfirm,
   showLoading,
@@ -19,6 +20,7 @@ const CustomersPage = ({ currentUserRole }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [viewingAssessmentFor, setViewingAssessmentFor] = useState(null);
 
   const fetchCustomers = async () => {
     try {
@@ -89,6 +91,15 @@ const CustomersPage = ({ currentUserRole }) => {
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  if (viewingAssessmentFor) {
+    return (
+      <LatestAssessmentPage
+        customer={viewingAssessmentFor}
+        onBack={() => setViewingAssessmentFor(null)}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
@@ -225,6 +236,13 @@ const CustomersPage = ({ currentUserRole }) => {
                       {isAdmin && (
                         <td className="p-4 text-right vertical-middle">
                           <div className="flex items-center justify-end gap-3">
+                            <button
+                              onClick={() => setViewingAssessmentFor(customer)}
+                              className="p-1.5 text-accent hover:text-depil transition-colors cursor-pointer"
+                              title="Ver Último Expediente"
+                            >
+                              <LuFileText size={16} />
+                            </button>
                             <button
                               onClick={() =>
                                 handleOpenEdit(customer.customerId)

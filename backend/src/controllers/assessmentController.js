@@ -270,3 +270,27 @@ export const createAssessment = async (req, res) => {
     });
   }
 };
+
+// Historial global: todos los expedientes de Modelha DK, para el buscador
+// de "Historial de Expedientes" (solo Administrador).
+export const getAllAssessments = async (req, res) => {
+  try {
+    const assessments = await MedicalAssessment.findAll({
+      include: [
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["customerId", "name", "phone"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.status(200).json(assessments);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching all assessments",
+      error: error.message,
+    });
+  }
+};

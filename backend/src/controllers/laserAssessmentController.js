@@ -166,3 +166,25 @@ export const createLaserAssessment = async (req, res) => {
     });
   }
 };
+
+export const getAllLaserAssessments = async (req, res) => {
+  try {
+    const assessments = await LaserMedicalAssessment.findAll({
+      include: [
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["customerId", "name", "phone"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.status(200).json(assessments);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching all laser assessments",
+      error: error.message,
+    });
+  }
+};

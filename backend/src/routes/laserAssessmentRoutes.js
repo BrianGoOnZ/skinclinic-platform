@@ -4,6 +4,7 @@ import {
   getLaserAssessmentHistoryByCustomer,
   getLaserAssessmentByAppointment,
   createLaserAssessment,
+  getAllLaserAssessments,
 } from "../controllers/laserAssessmentController.js";
 import {
   protect,
@@ -25,6 +26,13 @@ router.get(
   protect,
   restrictTo("Administrador"),
   getLaserAssessmentHistoryByCustomer,
+);
+
+router.get(
+  "/all",
+  protect,
+  restrictTo("Administrador"),
+  getAllLaserAssessments,
 );
 
 router.get(
