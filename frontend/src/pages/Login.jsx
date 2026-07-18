@@ -94,7 +94,7 @@ const LoginSPA = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] p-4 relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-r from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] p-4 relative overflow-hidden">
       <div className="absolute -top-40 -left-40 w-125 h-125 bg-secondary/15 rounded-full blur-[100px] pointer-events-none animate-[float-blob-a_9s_ease-in-out_infinite]" />
       <div className="absolute -bottom-40 -right-40 w-125 h-125 bg-depil-soft/70 rounded-full blur-[100px] pointer-events-none animate-[float-blob-b_11s_ease-in-out_infinite]" />
 

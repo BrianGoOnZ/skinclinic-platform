@@ -81,17 +81,17 @@ const Sidebar = ({
     >
       {/* Bloque superior del perfil: Altura fija al contraer y expansión fluida al abrir */}
       <div
-        className={`w-full px-4 flex flex-col items-center justify-center text-center border-b border-gray-300 bg-gradient-to-l from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] transition-all duration-300 shrink-0 ${isCollapsed ? "h-20 gap-0" : "py-5 gap-2"}`}
+        className={`w-full px-4 flex flex-col items-center justify-center text-center border-b border-gray-300 bg-linear-to-l from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] transition-all duration-300 shrink-0 ${isCollapsed ? "h-20 gap-0" : "py-5 gap-2"}`}
       >
         {/* El círculo de las iniciales fijo en el centro superior */}
-        <div className="w-11 h-11 shrink-0 rounded-full bg-gradient-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-sm shadow-md transition-transform duration-300">
+        <div className="w-11 h-11 shrink-0 rounded-full bg-linear-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-sm shadow-md transition-transform duration-300">
           {getInitials(userName)}
         </div>
 
         {/* El nombre y el rol se despliegan abajo con una transición limpia */}
         {!isCollapsed && (
           <div className="overflow-hidden animate-[fadeIn_0.2s_ease-out] w-full mt-1">
-            <p className="text-sm font-bold text-primary truncate max-w-[200px] mx-auto">
+            <p className="text-sm font-bold text-primary truncate max-w-50 mx-auto">
               {userName || "Usuario"}
             </p>
             <p className="text-[11px] font-bold text-gold uppercase tracking-wide mt-0.5">

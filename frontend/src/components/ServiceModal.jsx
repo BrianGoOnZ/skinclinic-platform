@@ -8,6 +8,12 @@ import {
   showError,
 } from "../utils/alerts";
 
+// Colores de marca unificados con la vista principal para sincronía total
+const BRAND_COLORS = {
+  "Modelha DK": "#197e88",
+  Depilclinik: "#c026d3",
+};
+
 const initialFormState = {
   brand: "Modelha DK",
   name: "",
@@ -25,6 +31,9 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
   const [inclusions, setInclusions] = useState([""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Determinar dinámicamente el color corporativo actual según la selección en el formulario
+  const currentBrandColor = BRAND_COLORS[formData.brand] || "#197e88";
 
   useEffect(() => {
     if (isOpen) {
@@ -114,19 +123,25 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col text-left">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/70">
-          <h2 className="text-lg font-bold text-primary">
+        {/* Cabecera del Modal Dinámica (Cambio en seco sin transición intermedia) */}
+        <div
+          className="p-6 flex justify-between items-center shrink-0"
+          style={{ backgroundColor: currentBrandColor }}
+        >
+          <h2 className="text-lg font-bold text-white uppercase tracking-wide">
             {isEditMode ? "Editar Servicio" : "Nuevo Servicio"}
           </h2>
           <button
             onClick={onClose}
-            className="text-accent hover:text-primary text-sm font-bold cursor-pointer"
+            className="text-white/80 hover:text-white transition-colors text-sm font-bold cursor-pointer"
           >
-            <LuX size={20} />
+            <LuX size={22} />
           </button>
         </div>
 
+        {/* Cuerpo del Formulario con scroll independiente */}
         <form
+          id="serviceForm"
           onSubmit={handleSubmit}
           className="p-6 overflow-y-auto space-y-4 flex-1"
         >
@@ -136,28 +151,43 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
             </p>
           )}
 
+          {/* Selección de Marca Restaurada a Botones Originales */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Marca *
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {["Modelha DK", "Depilclinik"].map((brand) => (
-                <button
-                  type="button"
-                  key={brand}
-                  onClick={() => setFormData((prev) => ({ ...prev, brand }))}
-                  className={`px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors cursor-pointer ${
-                    formData.brand === brand
-                      ? "bg-secondary text-white border-secondary"
-                      : "border-borderClinik text-primary hover:bg-gray-50"
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
+              {["Modelha DK", "Depilclinik"].map((brand) => {
+                const isSelected = formData.brand === brand;
+                const brandColor = BRAND_COLORS[brand];
+                return (
+                  <button
+                    type="button"
+                    key={brand}
+                    onClick={() => setFormData((prev) => ({ ...prev, brand }))}
+                    className="px-4 py-2.5 rounded-xl border text-sm font-semibold cursor-pointer text-center outline-none ring-0 focus:outline-none"
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: brandColor,
+                            borderColor: brandColor,
+                            color: "#fff",
+                          }
+                        : {
+                            borderColor: "#e5e7eb",
+                            color: "#1e293b",
+                            backgroundColor: "#fff",
+                          }
+                    }
+                  >
+                    {brand}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
+          {/* Nombre del Servicio */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Nombre del Servicio *
@@ -169,10 +199,13 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
               value={formData.name}
               onChange={handleChange}
               placeholder="Ej. Depilación Láser Full Body"
-              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white transition-colors"
+              onFocus={(e) => (e.target.style.borderColor = currentBrandColor)}
+              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
             />
           </div>
 
+          {/* Descripción */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Descripción
@@ -182,10 +215,13 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
               rows="3"
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white resize-none"
+              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white resize-none transition-colors"
+              onFocus={(e) => (e.target.style.borderColor = currentBrandColor)}
+              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
             />
           </div>
 
+          {/* Sección de Precios (Alineación y Label corregidos) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-primary uppercase mb-1">
@@ -199,7 +235,12 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
                 required
                 value={formData.regularPrice}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+                placeholder="Ej. 1500"
+                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white transition-colors"
+                onFocus={(e) =>
+                  (e.target.style.borderColor = currentBrandColor)
+                }
+                onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
               />
             </div>
             <div>
@@ -213,11 +254,17 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
                 name="promoPrice"
                 value={formData.promoPrice}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+                placeholder="Ej. 1200"
+                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white transition-colors"
+                onFocus={(e) =>
+                  (e.target.style.borderColor = currentBrandColor)
+                }
+                onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
               />
             </div>
           </div>
 
+          {/* Frecuencia Sugerida */}
           <div>
             <label className="block text-xs font-bold text-primary uppercase mb-1">
               Frecuencia Sugerida
@@ -228,21 +275,26 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
               value={formData.suggestedFrequency}
               onChange={handleChange}
               placeholder="Ej. Cada 21 días"
-              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+              className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white transition-colors"
+              onFocus={(e) => (e.target.style.borderColor = currentBrandColor)}
+              onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
             />
           </div>
 
+          {/* Valoración Médica */}
           <label className="flex items-center gap-2 text-sm font-semibold text-primary cursor-pointer select-none">
             <input
               type="checkbox"
               name="requiresAssessment"
               checked={formData.requiresAssessment}
               onChange={handleChange}
-              className="accent-secondary h-4 w-4 rounded border-borderClinik"
+              className="h-4 w-4 rounded border-borderClinik"
+              style={{ accentColor: currentBrandColor }}
             />
             Requiere valoración médica previa
           </label>
 
+          {/* Inclusiones */}
           <div className="border-t border-gray-100 pt-4">
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-primary uppercase">
@@ -251,7 +303,8 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
               <button
                 type="button"
                 onClick={handleAddInclusion}
-                className="flex items-center gap-1 text-xs font-semibold text-secondary hover:underline cursor-pointer"
+                className="flex items-center gap-1 text-xs font-semibold hover:underline cursor-pointer transition-colors"
+                style={{ color: currentBrandColor }}
               >
                 <LuPlus size={14} /> Agregar ítem
               </button>
@@ -267,7 +320,11 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
                       handleInclusionChange(index, e.target.value)
                     }
                     placeholder="Ej. 6 sesiones de láser"
-                    className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+                    className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none bg-white transition-colors"
+                    onFocus={(e) =>
+                      (e.target.style.borderColor = currentBrandColor)
+                    }
+                    onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
                   />
                   {inclusions.length > 1 && (
                     <button
@@ -282,28 +339,32 @@ const ServiceModal = ({ isOpen, onClose, onRefresh, service }) => {
               ))}
             </div>
           </div>
-
-          <div className="border-t border-gray-100 pt-4 flex justify-end gap-2 bg-gray-50/70 -mx-6 -mb-6 p-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2.5 rounded-full bg-secondary text-white font-bold text-xs hover:bg-[#14676f] transition-colors cursor-pointer shadow-md disabled:opacity-50"
-            >
-              {loading
-                ? "Guardando..."
-                : isEditMode
-                  ? "Guardar Cambios"
-                  : "Crear Servicio"}
-            </button>
-          </div>
         </form>
+
+        {/* Barra de Acciones Estática Fija en la Base */}
+        <div className="border-t border-gray-100 flex justify-end gap-2 bg-gray-50/70 p-4 shrink-0 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border border-borderClinik rounded-full text-xs font-semibold text-primary hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            form="serviceForm"
+            disabled={loading}
+            className="px-5 py-2.5 rounded-full text-white font-bold text-xs transition-colors cursor-pointer shadow-md disabled:opacity-50 hover:brightness-95"
+            style={{ backgroundColor: currentBrandColor }}
+          >
+            {loading
+              ? "Guardando..."
+              : isEditMode
+                ? "Guardar Cambios"
+                : "Crear Servicio"}
+          </button>
+        </div>
       </div>
     </div>
   );
