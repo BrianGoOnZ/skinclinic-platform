@@ -33,7 +33,27 @@ const LoginSPA = ({ onLoginSuccess }) => {
       if (loggedUser.mustChangePassword) {
         setMustChangePass(true);
       } else {
-        showSuccess("¡Bienvenida!", `Hola, ${loggedUser.name}`);
+        // 💡 El backend mapea 'gender' en minúscula dentro de la base de datos.
+        // Usamos el 'loggedUser.gender' directo y agregamos una validación por si no se cargó el registro.
+        const generoBD = loggedUser.gender
+          ? String(loggedUser.gender).toUpperCase().trim()
+          : "ND";
+        const nombreUsuario = loggedUser.name || "";
+
+        let saludoCompleto = "";
+
+        // Mapeo directo contra tu ENUM ('H', 'M', 'ND')
+        if (generoBD === "H") {
+          saludoCompleto = `¡Bienvenido de vuelta, ${nombreUsuario}!`;
+        } else if (generoBD === "M") {
+          saludoCompleto = `¡Bienvenida de vuelta, ${nombreUsuario}!`;
+        } else {
+          // Fallback si la respuesta de la base de datos es 'ND'
+          saludoCompleto = `¡Hola, ${nombreUsuario}!`;
+        }
+
+        // showSuccess(TítuloGrandeEnUnaSolaLínea, MensajeCortoAbajo)
+        showSuccess(saludoCompleto, "Inicio de sesión correcto");
         onLoginSuccess(loggedUser);
       }
     } catch (err) {
@@ -74,14 +94,14 @@ const LoginSPA = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-tr from-[#e7f2f3] via-[#f4f8f9] to-[#fbe9f1] p-4 relative overflow-hidden">
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[100px] pointer-events-none animate-[float-blob-a_9s_ease-in-out_infinite]" />
-      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-depil-soft/70 rounded-full blur-[100px] pointer-events-none animate-[float-blob-b_11s_ease-in-out_infinite]" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] p-4 relative overflow-hidden">
+      <div className="absolute -top-40 -left-40 w-125 h-125 bg-secondary/15 rounded-full blur-[100px] pointer-events-none animate-[float-blob-a_9s_ease-in-out_infinite]" />
+      <div className="absolute -bottom-40 -right-40 w-125 h-125 bg-depil-soft/70 rounded-full blur-[100px] pointer-events-none animate-[float-blob-b_11s_ease-in-out_infinite]" />
 
-      <div className="bg-white w-full max-w-[850px] min-h-[500px] rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden relative z-10 border border-white/60 text-left animate-[card-in_0.6s_ease-out]">
-        <div className="w-full md:w-[40%] bg-gradient-to-br from-depil to-primary text-white p-8 flex flex-col justify-between relative overflow-hidden">
+      <div className="bg-white w-full max-w-212.5 min-h-125 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden relative z-10 border border-white/60 text-left animate-[card-in_0.6s_ease-out]">
+        <div className="w-full md:w-[40%] bg-linear-to-br from-depil to-primary text-white p-8 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white via-transparent to-black transform -skew-x-12 origin-top-left scale-150" />
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-white via-transparent to-black transform -skew-x-12 origin-top-left scale-150" />
             <div className="absolute -top-20 -left-20 w-80 h-80 border-4 border-white rounded-3xl transform rotate-45" />
             <div className="absolute -top-10 -left-10 w-80 h-80 border-4 border-white rounded-3xl transform rotate-12" />
           </div>
@@ -178,7 +198,7 @@ const LoginSPA = ({ onLoginSuccess }) => {
 
                   <button
                     type="submit"
-                    className="w-full mt-2 p-2.5 rounded-full bg-gradient-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer shadow-md uppercase tracking-wider"
+                    className="w-full mt-2 p-2.5 rounded-full bg-linear-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer shadow-md uppercase tracking-wider"
                   >
                     Guardar y Acceder
                   </button>
@@ -265,16 +285,9 @@ const LoginSPA = ({ onLoginSuccess }) => {
                   </div>
 
                   <div className="relative z-20 flex items-center justify-between text-xs mt-2">
-                    <a
-                      href="#forgot"
-                      className="text-accent font-semibold hover:text-secondary hover:underline transition-colors"
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </a>
-
                     <button
                       type="submit"
-                      className="px-8 py-2 rounded-full bg-gradient-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-95 shadow-md transition-all transform active:scale-95 cursor-pointer uppercase tracking-wider"
+                      className="px-8 py-2 rounded-full bg-linear-to-r from-secondary to-depil text-white text-sm font-bold hover:opacity-95 shadow-md transition-all transform active:scale-95 cursor-pointer uppercase tracking-wider"
                     >
                       Iniciar Sesión
                     </button>

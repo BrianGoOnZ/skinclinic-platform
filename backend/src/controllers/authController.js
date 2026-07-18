@@ -109,6 +109,7 @@ export const login = async (req, res) => {
         id: user.publicId,
         name: user.name,
         role: user.role,
+        gender: user.gender,
         mustChangePassword: user.mustChangePassword,
       },
     });

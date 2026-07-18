@@ -30,6 +30,10 @@ const Sidebar = ({
   userName,
 }) => {
   const [isClientesOpen, setIsClientesOpen] = React.useState(false);
+
+  // 💡 Por defecto arranca colapsado (en chico)
+  const [isCollapsed, setIsCollapsed] = React.useState(true);
+
   const menuItems = [
     {
       id: "dashboard",
@@ -70,22 +74,37 @@ const Sidebar = ({
   );
 
   return (
-    <aside className="w-64 h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0">
-      <div className="px-6 py-6 flex flex-col items-center text-center gap-2 border-b border-gray-50 bg-gradient-to-br from-secondary/10 via-white to-depil/10">
-        <div className="w-16 h-16 rounded-full bg-linear-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-lg shadow-md">
+    <aside
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+      className={`${isCollapsed ? "w-20" : "w-64"} h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0 transition-all duration-300 relative`}
+    >
+      {/* Bloque superior del perfil: Altura fija al contraer y expansión fluida al abrir */}
+      <div
+        className={`w-full px-4 flex flex-col items-center justify-center text-center border-b border-gray-300 bg-gradient-to-l from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] transition-all duration-300 shrink-0 ${isCollapsed ? "h-20 gap-0" : "py-5 gap-2"}`}
+      >
+        {/* El círculo de las iniciales fijo en el centro superior */}
+        <div className="w-11 h-11 shrink-0 rounded-full bg-gradient-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-sm shadow-md transition-transform duration-300">
           {getInitials(userName)}
         </div>
-        <div>
-          <p className="text-sm font-bold text-primary truncate max-w-45">
-            {userName || "Usuario"}
-          </p>
-          <p className="text-[11px] font-bold text-gold uppercase tracking-wide mt-0.5">
-            {userRole || "Colaborador"}
-          </p>
-        </div>
+
+        {/* El nombre y el rol se despliegan abajo con una transición limpia */}
+        {!isCollapsed && (
+          <div className="overflow-hidden animate-[fadeIn_0.2s_ease-out] w-full mt-1">
+            <p className="text-sm font-bold text-primary truncate max-w-[200px] mx-auto">
+              {userName || "Usuario"}
+            </p>
+            <p className="text-[11px] font-bold text-gold uppercase tracking-wide mt-0.5">
+              {userRole || "Colaborador"}
+            </p>
+          </div>
+        )}
       </div>
 
-      <nav className="flex-1 px-4 py-4 flex flex-col gap-1 overflow-y-auto">
+      {/* Navegación del menú */}
+      <nav
+        className={`flex-1 ${isCollapsed ? "px-2" : "px-4"} py-4 flex flex-col gap-1 overflow-y-auto transition-all`}
+      >
         {visibleItems.map((item) => {
           const isActive = activeView === item.id;
           const isAnyChildActive = item.children?.some(
@@ -94,7 +113,7 @@ const Sidebar = ({
           const isHighlighted = isActive || isAnyChildActive;
 
           return (
-            <div key={item.id} className="flex flex-col">
+            <div key={item.id} className="w-full flex flex-col">
               <div
                 onClick={() => {
                   setActiveView(item.id);
@@ -102,18 +121,23 @@ const Sidebar = ({
                     setIsClientesOpen(!isClientesOpen);
                   }
                 }}
-                className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-left ${
+                className={`flex items-center ${isCollapsed ? "justify-center px-0 w-12 h-12 mx-auto" : "gap-4 px-4 py-3.5 w-full"} rounded-xl text-sm font-bold transition-all cursor-pointer text-left ${
                   isHighlighted
                     ? "bg-linear-to-r from-secondary to-depil text-white shadow-md shadow-depil/20"
                     : "text-gray-500 hover:bg-secondary/5 hover:text-secondary"
                 }`}
               >
-                <span className={isHighlighted ? "text-white" : "text-accent"}>
+                <span
+                  className={`${isHighlighted ? "text-white" : "text-accent"} shrink-0 flex items-center justify-center`}
+                >
                   {item.icon}
                 </span>
-                <span className="flex-1">{item.label}</span>
 
-                {item.hasChildren && (
+                {!isCollapsed && (
+                  <span className="flex-1 truncate">{item.label}</span>
+                )}
+
+                {!isCollapsed && item.hasChildren && (
                   <span
                     className={isHighlighted ? "text-white" : "text-gray-400"}
                   >
@@ -126,8 +150,9 @@ const Sidebar = ({
                 )}
               </div>
 
-              {item.hasChildren && isClientesOpen && (
-                <div className="flex flex-col gap-1 mt-1 pl-6">
+              {/* Submenú desplegable: Solo se muestra si está abierto y no colapsado */}
+              {!isCollapsed && item.hasChildren && isClientesOpen && (
+                <div className="flex flex-col gap-1 mt-1 pl-6 animate-[fadeIn_0.2s_ease-out]">
                   {item.children?.map((child) => {
                     const isChildActive = activeView === child.id;
                     return (
@@ -154,15 +179,18 @@ const Sidebar = ({
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-50">
+      {/* Botón de Cerrar Sesión inferior */}
+      <div
+        className={`${isCollapsed ? "p-2 text-center" : "p-4"} border-t border-gray-50 transition-all shrink-0`}
+      >
         <div
           onClick={onLogout}
-          className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-all cursor-pointer text-left text-gray-500 hover:bg-red-50 hover:text-red-600"
+          className={`flex items-center ${isCollapsed ? "justify-center px-0 w-12 h-12 mx-auto" : "gap-4 px-4 py-3.5 w-full"} rounded-xl text-sm font-bold transition-all cursor-pointer text-left text-gray-500 hover:bg-red-50 hover:text-red-600`}
         >
-          <span>
+          <span className="shrink-0 flex items-center justify-center">
             <LuLogOut size={20} />
           </span>
-          <span>Cerrar Sesión</span>
+          {!isCollapsed && <span className="truncate">Cerrar Sesión</span>}
         </div>
       </div>
     </aside>
