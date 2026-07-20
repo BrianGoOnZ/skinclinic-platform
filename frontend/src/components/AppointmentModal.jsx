@@ -3,6 +3,7 @@ import { LuTriangleAlert } from "react-icons/lu";
 import api from "../services/api";
 import ConflictOverrideModal from "./ConflictOverrideModal";
 import CustomerAutocomplete from "./CustomerAutocomplete";
+import CheckoutModal from "./CheckoutModal";
 import {
   APPOINTMENT_STATUSES,
   STATUS_META,
@@ -41,6 +42,8 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   const [liveConflict, setLiveConflict] = useState(null);
   const [conflictToConfirm, setConflictToConfirm] = useState(null);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [pendingCheckoutData, setPendingCheckoutData] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -172,19 +175,48 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
     showLoading(isEditMode ? "Guardando cita..." : "Agendando cita...");
 
     try {
+      let updatedAppointment = appointment;
+
       if (isEditMode) {
-        await api.put(
+        const putResponse = await api.put(
           `/appointments/${appointment.appointmentId}`,
           buildPayload(force),
         );
+        updatedAppointment = putResponse.data;
+
+        const isNowCompleting =
+          formData.status === "Completada" &&
+          appointment.status !== "Completada";
+
         if (formData.status !== appointment.status) {
-          await api.patch(`/appointments/${appointment.appointmentId}/status`, {
-            status: formData.status,
+          const statusResponse = await api.patch(
+            `/appointments/${appointment.appointmentId}/status`,
+            { status: formData.status },
+          );
+          updatedAppointment = {
+            ...updatedAppointment,
+            status: statusResponse.data.status,
+          };
+        }
+
+        if (isNowCompleting) {
+          closeAlert();
+          setPendingCheckoutData({
+            appointmentId: appointment.appointmentId,
+            customer: selectedCustomer,
+            marca: formData.marca,
+            service: services.find(
+              (s) => s.serviceId === Number(formData.serviceId),
+            ),
           });
+          setShowCheckoutModal(true);
+          setLoading(false);
+          return;
         }
       } else {
         await api.post("/appointments", buildPayload(force));
       }
+
       closeAlert();
       showSuccess(isEditMode ? "Cita actualizada" : "Cita agendada");
       onRefresh();
@@ -426,6 +458,25 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
         onCancel={() => setShowOverrideModal(false)}
         onForce={handleForceOverride}
         loading={loading}
+      />
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        appointment={pendingCheckoutData}
+        onClose={() => {
+          setShowCheckoutModal(false);
+          onRefresh();
+          onClose();
+        }}
+        onCompleted={() => {
+          setShowCheckoutModal(false);
+          onRefresh();
+          onClose();
+        }}
+        onSkip={() => {
+          setShowCheckoutModal(false);
+          onRefresh();
+          onClose();
+        }}
       />
     </div>
   );

@@ -11,6 +11,7 @@ import api from "../services/api";
 import AppointmentModal from "../components/AppointmentModal";
 import AppointmentDetailsModal from "../components/AppointmentDetailsModal";
 import { STATUS_META } from "../constants/appointmentStatus";
+import CheckoutModal from "../components/CheckoutModal";
 
 const localizer = dateFnsLocalizer({
   format,
@@ -25,8 +26,6 @@ const BRAND_COLORS = {
   Depilclinik: "#c026d3",
 };
 
-// Un color representativo por mes (Ene -> Dic), tono clinico/spa, no forma
-// parte de la paleta global de la marca: solo tematiza el calendario.
 const MONTH_ACCENTS = [
   "#5b7fa6", // Enero
   "#c0247d", // Febrero
@@ -77,11 +76,12 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
     .filter((appt) => appt.startTime && appt.endTime)
     .map((appt) => ({
       id: appt.appointmentId,
-      title: `${appt.customer?.name || "Cliente"} · ${appt.service?.name || ""}`,
+      title: `${appt.status === "Completada" && !appt.sale ? "💲 " : ""}${appt.customer?.name || "Cliente"} · ${appt.service?.name || ""}`,
       start: new Date(appt.startTime),
       end: new Date(appt.endTime),
       marca: appt.marca,
       status: appt.status,
+      needsCheckout: appt.status === "Completada" && !appt.sale,
       resource: appt,
     }));
 
@@ -91,9 +91,10 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
     return {
       style: {
         backgroundColor: statusColor,
-        borderLeft: `4px solid ${brandColor}`,
+        borderLeft: `4px solid ${event.needsCheckout ? "#dc2626" : brandColor}`,
         opacity: event.status === "Cancelada" ? 0.45 : 1,
         textDecoration: event.status === "Cancelada" ? "line-through" : "none",
+        boxShadow: event.needsCheckout ? "0 0 0 2px #dc2626 inset" : "none",
       },
     };
   };
@@ -103,7 +104,19 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
     setIsModalOpen(true);
   };
 
+  const [directCheckoutAppointment, setDirectCheckoutAppointment] =
+    useState(null);
+
   const handleSelectEvent = (event) => {
+    if (event.needsCheckout && isAdmin) {
+      setDirectCheckoutAppointment({
+        appointmentId: event.resource.appointmentId,
+        customer: event.resource.customer,
+        marca: event.resource.marca,
+        service: event.resource.service,
+      });
+      return;
+    }
     if (isAdmin) {
       setEditingAppointment(event.resource);
       setIsModalOpen(true);
@@ -201,6 +214,19 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
               }
             : undefined
         }
+      />
+      <CheckoutModal
+        isOpen={Boolean(directCheckoutAppointment)}
+        appointment={directCheckoutAppointment}
+        onClose={() => {
+          setDirectCheckoutAppointment(null);
+          fetchAppointments();
+        }}
+        onCompleted={() => {
+          setDirectCheckoutAppointment(null);
+          fetchAppointments();
+        }}
+        onSkip={() => setDirectCheckoutAppointment(null)}
       />
     </div>
   );

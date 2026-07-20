@@ -233,14 +233,18 @@ export const createAssessment = async (req, res) => {
     }
 
     if (facialEvaluation) {
+      const sanitizedFacial = {
+        ...facialEvaluation,
+        glogauScale: facialEvaluation.glogauScale || null,
+        glogauObservations: facialEvaluation.glogauObservations || null,
+      };
+
       await FacialEvaluation.create(
-        { ...facialEvaluation, assessmentId: assessment.assessmentId },
+        { ...sanitizedFacial, assessmentId: assessment.assessmentId },
         { transaction: t },
       );
     }
 
-    // Si esta cita era de un cliente nuevo pendiente de datos generales,
-    // ya se llenaron: se cierra esa bandera para futuras citas.
     if (appointment.isNewClientPendingData) {
       await Appointment.update(
         { isNewClientPendingData: false },
@@ -252,6 +256,16 @@ export const createAssessment = async (req, res) => {
       { assessmentId: assessment.assessmentId },
       t,
     );
+
+    if (
+      appointment.status !== "Cancelada" &&
+      appointment.status !== "Completada"
+    ) {
+      await Appointment.update(
+        { status: "Completada" },
+        { where: { appointmentId: appointment.appointmentId }, transaction: t },
+      );
+    }
 
     await t.commit();
 
@@ -290,6 +304,33 @@ export const getAllAssessments = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while fetching all assessments",
+      error: error.message,
+    });
+  }
+};
+
+export const getAssessmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const assessment = await MedicalAssessment.findByPk(id, {
+      include: [
+        ...fullIncludes,
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["customerId", "name", "phone"],
+        },
+      ],
+    });
+
+    if (!assessment) {
+      return res.status(404).json({ message: "Expediente no encontrado" });
+    }
+
+    res.status(200).json(assessment);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching assessment",
       error: error.message,
     });
   }

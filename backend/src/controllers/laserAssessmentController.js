@@ -150,6 +150,18 @@ export const createLaserAssessment = async (req, res) => {
       t,
     );
 
+    if (
+      appointment.status !== "Cancelada" &&
+      appointment.status !== "Completada"
+    ) {
+      await Appointment.update(
+        { status: "Completada" },
+        { where: { appointmentId: appointment.appointmentId }, transaction: t },
+      );
+    }
+
+    await t.commit();
+
     await t.commit();
 
     const fullAssessment = await LaserMedicalAssessment.findByPk(
@@ -184,6 +196,33 @@ export const getAllLaserAssessments = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while fetching all laser assessments",
+      error: error.message,
+    });
+  }
+};
+
+export const getLaserAssessmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const assessment = await LaserMedicalAssessment.findByPk(id, {
+      include: [
+        ...fullIncludes,
+        {
+          model: Customer,
+          as: "customer",
+          attributes: ["customerId", "name", "phone"],
+        },
+      ],
+    });
+
+    if (!assessment) {
+      return res.status(404).json({ message: "Expediente no encontrado" });
+    }
+
+    res.status(200).json(assessment);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching laser assessment",
       error: error.message,
     });
   }

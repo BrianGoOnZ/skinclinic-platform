@@ -6,7 +6,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx nodemon index.js"
+    "dev": "npx nodemon index.js",
+    "seed:admin": "node src/seeders/createAdmin.js",
+    "seed:collaborators": "node src/seeders/createCollaborators.js",
+    "seed:services": "node src/seeders/createServices.js"
   },
   "keywords": [],
   "author": "",

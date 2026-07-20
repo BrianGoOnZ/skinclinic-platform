@@ -88,7 +88,7 @@ const AppointmentDetailsModal = ({
         {onAttend && (
           <button
             onClick={() => onAttend(appointment.appointmentId)}
-            className="w-full mt-3 px-5 py-2.5 rounded-full bg-gradient-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+            className="w-full mt-3 px-5 py-2.5 rounded-full bg-linear-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
           >
             Atender Cliente
           </button>

@@ -5,14 +5,12 @@ import {
   LuPencil,
   LuCalendarClock,
   LuClipboardCheck,
-  LuTag,
+  LuCheck,
 } from "react-icons/lu";
 import ServiceModal from "../components/ServiceModal";
-import { LuCheck } from "react-icons/lu";
 import {
   showLoading,
   closeAlert,
-  showSuccess,
   showError,
   showConfirm,
   showToast,
@@ -23,15 +21,10 @@ const BRAND_COLORS = {
   Depilclinik: "#c026d3",
 };
 
-const FILTER_COLORS = {
-  Todos: "#012438",
-  ...BRAND_COLORS,
-};
-
 const ServicesPage = ({ currentUserRole }) => {
   const isAdmin = currentUserRole === "Administrador";
   const [services, setServices] = useState([]);
-  const [brandFilter, setBrandFilter] = useState("Todos");
+  const [brandFilter, setBrandFilter] = useState("Modelha DK");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,22 +95,21 @@ const ServicesPage = ({ currentUserRole }) => {
       currency: "MXN",
     }).format(value);
 
-  const filteredServices = services.filter(
-    (s) => brandFilter === "Todos" || s.brand === brandFilter,
-  );
+  // Filtrado directo de la marca elegida
+  const filteredServices = services.filter((s) => s.brand === brandFilter);
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex flex-wrap gap-2">
-          {["Todos", "Modelha DK", "Depilclinik"].map((brand) => {
+          {["Modelha DK", "Depilclinik"].map((brand) => {
             const isActive = brandFilter === brand;
-            const color = FILTER_COLORS[brand];
+            const color = BRAND_COLORS[brand];
             return (
               <button
                 key={brand}
                 onClick={() => setBrandFilter(brand)}
-                className="px-4 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer shadow-sm"
                 style={
                   isActive
                     ? {
@@ -125,7 +117,11 @@ const ServicesPage = ({ currentUserRole }) => {
                         borderColor: color,
                         color: "#fff",
                       }
-                    : { borderColor: color, color }
+                    : {
+                        borderColor: "#e5e7eb",
+                        color: "#6b7280",
+                        backgroundColor: "#fff",
+                      }
                 }
               >
                 {brand}
@@ -138,7 +134,7 @@ const ServicesPage = ({ currentUserRole }) => {
           <button
             onClick={handleOpenCreate}
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-white font-bold text-xs transition-colors cursor-pointer shadow-md"
-            style={{ backgroundColor: FILTER_COLORS[brandFilter] }}
+            style={{ backgroundColor: BRAND_COLORS[brandFilter] }}
           >
             <LuPlus size={14} /> Nuevo Servicio
           </button>
@@ -155,7 +151,7 @@ const ServicesPage = ({ currentUserRole }) => {
         </p>
       ) : filteredServices.length === 0 ? (
         <p className="text-accent text-center font-medium p-8 text-sm">
-          No se encontraron servicios registrados.
+          No se encontraron servicios registrados para esta marca.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -185,7 +181,7 @@ const ServicesPage = ({ currentUserRole }) => {
                 )}
               </div>
 
-              <div className="p-5 flex flex-col gap-4 flex-1">
+              <div className="p-5 flex flex-col gap-3 flex-1">
                 <div>
                   <h3 className="text-base font-bold text-primary leading-snug">
                     {service.name}
@@ -195,14 +191,16 @@ const ServicesPage = ({ currentUserRole }) => {
                       </span>
                     )}
                   </h3>
-                  {service.description && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                  {service.description ? (
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-10">
                       {service.description}
                     </p>
+                  ) : (
+                    <div className="min-h-10" />
                   )}
                 </div>
 
-                <div className="flex items-end gap-2 mt-auto">
+                <div className="flex items-end gap-2">
                   {service.promoPrice ? (
                     <>
                       <span className="text-lg font-black text-secondary">
@@ -219,16 +217,18 @@ const ServicesPage = ({ currentUserRole }) => {
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                  {service.suggestedFrequency && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent bg-gray-50 border border-borderClinik/40 px-2.5 py-1 rounded-full">
-                      <LuCalendarClock size={12} />
+                {service.suggestedFrequency && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-accent bg-gray-50 border border-gray-200 px-3 py-1 rounded-full shrink-0">
+                      <LuCalendarClock size={13} className="shrink-0" />
                       {service.suggestedFrequency}
                     </span>
-                  )}
+                  </div>
+                )}
 
+                <div className="flex flex-col gap-2 mt-auto pt-2">
                   {service.inclusions?.length > 0 && (
-                    <ul className="flex flex-col gap-1.5">
+                    <ul className="flex flex-col gap-1.5 my-1">
                       {service.inclusions.map((inc) => (
                         <li
                           key={inc.inclusionId}
@@ -236,7 +236,7 @@ const ServicesPage = ({ currentUserRole }) => {
                         >
                           <LuCheck
                             size={14}
-                            className="text-secondary shrink-0 mt-0.5"
+                            className="text-emerald-600 shrink-0 mt-0.5"
                           />
                           <span>{inc.itemName}</span>
                         </li>
@@ -245,10 +245,12 @@ const ServicesPage = ({ currentUserRole }) => {
                   )}
 
                   {service.requiresAssessment && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
-                      <LuClipboardCheck size={12} />
-                      Requiere Valoración
-                    </span>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full shrink-0">
+                        <LuClipboardCheck size={13} className="shrink-0" />
+                        Requiere Valoración
+                      </span>
+                    </div>
                   )}
                 </div>
 
@@ -256,7 +258,7 @@ const ServicesPage = ({ currentUserRole }) => {
                   <button
                     onClick={() => handleToggleActive(service)}
                     disabled={togglingId === service.serviceId}
-                    className={`mt-1 w-full text-center py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 ${
+                    className={`mt-2 w-full text-center py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 ${
                       service.isActive
                         ? "bg-red-50 text-red-600 hover:bg-red-100"
                         : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"

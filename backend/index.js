@@ -3,6 +3,12 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import sequelize from "./src/config/db.js";
+
+// Modelos necesarios
+import SaleItem from "./src/models/SaleItem.js";
+import Service from "./src/models/Service.js";
+
+// Rutas
 import authRoutes from "./src/routes/authRoutes.js";
 import customerRoutes from "./src/routes/customerRoutes.js";
 import appointmentRoutes from "./src/routes/appointmentRoutes.js";
@@ -10,36 +16,39 @@ import serviceRoutes from "./src/routes/serviceRoutes.js";
 import assessmentRoutes from "./src/routes/assessmentRoutes.js";
 import laserAssessmentRoutes from "./src/routes/laserAssessmentRoutes.js";
 import assessmentPhotoRoutes from "./src/routes/assessmentPhotoRoutes.js";
+import saleRoutes from "./src/routes/saleRoutes.js";
+import dashboardRoutes from "./src/routes/dashboardRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-// Configuración de CORS para conectar con el Frontend de Vite
 app.use(
   cors({
     origin: "http://localhost:5173",
-    credentials: true, // Permite el intercambio de cookies HTTPOnly
+    credentials: true,
   }),
 );
 
 app.use(express.json());
 app.use(cookieParser());
 
+// Única asociación faltante para conectar SaleItem con Service
+SaleItem.belongsTo(Service, { foreignKey: "serviceId", as: "service" });
+
 // Endpoints del sistema
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
-
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/services", serviceRoutes);
-
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/laser-assessments", laserAssessmentRoutes);
 app.use("/api/assessment-photos", assessmentPhotoRoutes);
+app.use("/api/sales", saleRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// Bucle para esperar a que el contenedor de MySQL esté listo
 async function connectWithRetry(retries = 10, delay = 5000) {
   while (retries > 0) {
     try {

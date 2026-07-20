@@ -5,6 +5,7 @@ import Service from "./Service.js";
 import User from "./User.js";
 import MedicalAssessment from "./MedicalAssessment.js";
 import LaserMedicalAssessment from "./LaserMedicalAssessment.js";
+import Sale from "./Sale.js";
 
 const Appointment = sequelize.define(
   "Appointment",
@@ -88,6 +89,15 @@ Appointment.hasOne(LaserMedicalAssessment, {
   as: "laserAssessment",
 });
 LaserMedicalAssessment.belongsTo(Appointment, {
+  foreignKey: "appointmentId",
+  as: "appointment",
+});
+
+Appointment.hasOne(Sale, {
+  foreignKey: "appointmentId",
+  as: "sale",
+});
+Sale.belongsTo(Appointment, {
   foreignKey: "appointmentId",
   as: "appointment",
 });

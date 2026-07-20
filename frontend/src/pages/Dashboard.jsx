@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../services/api";
+import { showToast } from "../utils/alerts";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Employees from "./Employees";
@@ -6,6 +8,9 @@ import CustomersPage from "./CustomersPage";
 import Agenda from "./Agenda";
 import ServicesPage from "./ServicesPage";
 import AssessmentHistoryPage from "./AssessmentHistoryPage";
+import IngresosPage from "./IngresosPage";
+import DashboardHome from "./DashboardPage";
+import CollaboratorDashboard from "./CollaboratorDashboard";
 
 const PAGE_TITLES = {
   empleados: "Gestión de Colaboradores",
@@ -19,8 +24,49 @@ const PAGE_TITLES = {
 const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
   const [activeView, setActiveView] = useState("dashboard");
 
+  const [pendingCheckoutCount, setPendingCheckoutCount] = useState(0);
+
+  const fetchPendingCheckouts = async () => {
+    if (user?.role !== "Administrador") return;
+    try {
+      const response = await api.get("/appointments/pending-checkouts");
+      setPendingCheckoutCount(response.data.length);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingCheckouts();
+    const interval = setInterval(fetchPendingCheckouts, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleBellClick = () => {
+    if (pendingCheckoutCount === 0) {
+      showToast("info", "No tienes cobros pendientes");
+      return;
+    }
+    setActiveView("agenda");
+    showToast(
+      "warning",
+      `Tienes ${pendingCheckoutCount} cita(s) marcadas en rojo esperando cobro en tu Agenda`,
+    );
+  };
+
   const renderContent = () => {
     switch (activeView) {
+      case "dashboard":
+        if (user?.role !== "Administrador") {
+          return (
+            <CollaboratorDashboard
+              userRole={user?.role}
+              userName={user?.name}
+            />
+          );
+        }
+        return <DashboardHome userRole={user?.role} />;
+
       case "empleados":
         if (user?.role !== "Administrador") {
           return (
@@ -62,28 +108,15 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
       case "servicios":
         return <ServicesPage currentUserRole={user?.role} />;
 
-      case "dashboard":
-        return (
-          <div className="flex flex-col gap-6 w-full text-left">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold mb-3 ${
-                  user?.role === "Administrador"
-                    ? "bg-red-50 text-red-700 border border-red-100"
-                    : "bg-blue-50 text-secondary border border-blue-100"
-                }`}
-              >
-                {user?.role === "Administrador"
-                  ? "Dashboard Administrador"
-                  : "Dashboard Colaborador"}
-              </span>
-              <p className="text-sm text-accent font-medium">
-                Este panel está en construcción. Los módulos de Ingresos y
-                Rendimiento se conectarán aquí una vez completados.
-              </p>
+      case "ingresos":
+        if (user?.role !== "Administrador") {
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+              No tienes permisos para acceder a esta sección.
             </div>
-          </div>
-        );
+          );
+        }
+        return <IngresosPage />;
 
       default:
         return (
@@ -105,7 +138,15 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar pageTitle={PAGE_TITLES[activeView]} />
+        <Navbar
+          pageTitle={PAGE_TITLES[activeView]}
+          pendingCheckoutCount={
+            user?.role === "Administrador" ? pendingCheckoutCount : 0
+          }
+          onBellClick={
+            user?.role === "Administrador" ? handleBellClick : undefined
+          }
+        />
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {renderContent()}
         </main>

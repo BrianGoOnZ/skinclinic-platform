@@ -1,6 +1,7 @@
 import React from "react";
+import { LuBell } from "react-icons/lu";
 
-const Navbar = ({ pageTitle }) => {
+const Navbar = ({ pageTitle, pendingCheckoutCount = 0, onBellClick }) => {
   const isDashboard = !pageTitle;
 
   return (
@@ -17,7 +18,22 @@ const Navbar = ({ pageTitle }) => {
         )}
       </div>
 
-      <div className="flex items-center"></div>
+      <div className="flex items-center gap-3">
+        {onBellClick && (
+          <button
+            onClick={onBellClick}
+            className="relative p-2 rounded-full hover:bg-white/50 transition-colors cursor-pointer"
+            title="Citas pendientes de cobro"
+          >
+            <LuBell size={22} className="text-primary" />
+            {pendingCheckoutCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
+                {pendingCheckoutCount > 9 ? "9+" : pendingCheckoutCount}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
     </header>
   );
 };

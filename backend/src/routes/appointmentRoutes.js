@@ -5,6 +5,7 @@ import {
   updateAppointment,
   updateAppointmentStatus,
   checkAppointmentConflict,
+  getPendingCheckouts,
 } from "../controllers/appointmentController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 
@@ -19,6 +20,12 @@ router.patch(
   protect,
   restrictTo("Administrador"),
   updateAppointmentStatus,
+);
+router.get(
+  "/pending-checkouts",
+  protect,
+  restrictTo("Administrador"),
+  getPendingCheckouts,
 );
 
 export default router;

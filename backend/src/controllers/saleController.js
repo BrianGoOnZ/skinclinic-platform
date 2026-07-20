@@ -1,0 +1,371 @@
+import { Op } from "sequelize";
+import sequelize from "../config/db.js";
+import Sale from "../models/Sale.js";
+import SaleItem from "../models/SaleItem.js";
+import SalePayment from "../models/SalePayment.js";
+import Appointment from "../models/Appointment.js";
+import Customer from "../models/Customer.js";
+import Service from "../models/Service.js";
+import User from "../models/User.js";
+
+const saleIncludes = [
+  {
+    model: Customer,
+    as: "customer",
+    attributes: ["customerId", "name", "phone"],
+  },
+  { model: User, as: "collaborator", attributes: ["id", "name"] },
+  {
+    model: SaleItem,
+    as: "items",
+    include: [
+      {
+        model: Service,
+        as: "service",
+        attributes: ["serviceId", "name"],
+      },
+    ],
+  },
+  { model: SalePayment, as: "payments" },
+];
+
+const buildFolio = (saleId) => `V${String(saleId).padStart(6, "0")}`;
+
+const recomputeStatus = (totalAmount, amountPaid) => {
+  if (amountPaid >= totalAmount) return "Liquidada";
+  return "Con adeudo";
+};
+
+// Crea la venta a partir de una cita ya marcada como Completada
+export const createSale = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const { appointmentId, items, amountPaid, paymentMethod } = req.body;
+
+    if (!appointmentId || !Array.isArray(items) || items.length === 0) {
+      await t.rollback();
+      return res.status(400).json({
+        message:
+          "Se requiere la cita y al menos un servicio para registrar la venta",
+      });
+    }
+
+    const appointment = await Appointment.findByPk(appointmentId, {
+      transaction: t,
+    });
+
+    if (!appointment) {
+      await t.rollback();
+      return res.status(404).json({ message: "Cita no encontrada" });
+    }
+
+    if (appointment.status !== "Completada") {
+      await t.rollback();
+      return res.status(400).json({
+        message:
+          "Solo se puede registrar la venta de una cita marcada como Completada",
+      });
+    }
+
+    const existingSale = await Sale.findOne({
+      where: { appointmentId },
+      transaction: t,
+    });
+
+    if (existingSale) {
+      await t.rollback();
+      return res.status(400).json({
+        message: "Esta cita ya tiene una venta registrada",
+      });
+    }
+
+    const totalAmount = items.reduce((sum, item) => {
+      const unitPrice = Number(item.unitPrice);
+      const discount = Number(item.discountPercent) || 0;
+      return sum + unitPrice * (1 - discount / 100);
+    }, 0);
+
+    const paid = Number(amountPaid) || 0;
+
+    if (paid > totalAmount) {
+      await t.rollback();
+      return res.status(400).json({
+        message: "El monto pagado no puede ser mayor al total de la venta",
+      });
+    }
+
+    const newSale = await Sale.create(
+      {
+        folio: "PENDING",
+        appointmentId,
+        customerId: appointment.customerId,
+        userId: appointment.userId,
+        marca: appointment.marca,
+        totalAmount,
+        amountPaid: paid,
+        status: recomputeStatus(totalAmount, paid),
+      },
+      { transaction: t },
+    );
+
+    await newSale.update(
+      { folio: buildFolio(newSale.saleId) },
+      { transaction: t },
+    );
+
+    await SaleItem.bulkCreate(
+      items.map((item) => ({
+        saleId: newSale.saleId,
+        serviceId: item.serviceId,
+        unitPrice: item.unitPrice,
+        discountPercent: item.discountPercent || 0,
+      })),
+      { transaction: t },
+    );
+
+    if (paid > 0) {
+      await SalePayment.create(
+        {
+          saleId: newSale.saleId,
+          amount: paid,
+          paymentMethod: paymentMethod || "Efectivo",
+          registeredByUserId: req.user.id,
+        },
+        { transaction: t },
+      );
+    }
+
+    // Buscamos la venta completa dentro de la transacción
+    const fullSale = await Sale.findByPk(newSale.saleId, {
+      include: saleIncludes,
+      transaction: t,
+    });
+
+    await t.commit();
+
+    res.status(201).json(fullSale);
+  } catch (error) {
+    if (!t.finished) {
+      await t.rollback();
+    }
+    console.error("Error creating sale:", error);
+    res.status(500).json({
+      message: "Server error while creating sale",
+      error: error.message,
+    });
+  }
+}; // 👈 Corregida la llave de cierre que faltaba
+
+// Registra un abono adicional a una venta con adeudo
+export const registerPayment = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { amount, paymentMethod } = req.body;
+
+    if (!amount || Number(amount) <= 0) {
+      await t.rollback();
+      return res
+        .status(400)
+        .json({ message: "El monto del abono debe ser mayor a cero" });
+    }
+
+    const sale = await Sale.findByPk(id, { transaction: t });
+    if (!sale) {
+      await t.rollback();
+      return res.status(404).json({ message: "Venta no encontrada" });
+    }
+
+    if (sale.status === "Cancelada") {
+      await t.rollback();
+      return res.status(400).json({
+        message: "No se pueden registrar abonos en una venta cancelada",
+      });
+    }
+
+    const currentPaid = parseFloat(sale.amountPaid);
+    const total = parseFloat(sale.totalAmount);
+    const newPaid = currentPaid + Number(amount);
+
+    if (newPaid > total) {
+      await t.rollback();
+      return res.status(400).json({
+        message: `El abono excede el saldo pendiente. Saldo actual: ${(total - currentPaid).toFixed(2)}`,
+      });
+    }
+
+    await SalePayment.create(
+      {
+        saleId: sale.saleId,
+        amount,
+        paymentMethod: paymentMethod || "Efectivo",
+        registeredByUserId: req.user.id,
+      },
+      { transaction: t },
+    );
+
+    await sale.update(
+      {
+        amountPaid: newPaid,
+        status: recomputeStatus(total, newPaid),
+      },
+      { transaction: t },
+    );
+
+    await t.commit();
+
+    const fullSale = await Sale.findByPk(id, { include: saleIncludes });
+    res.status(200).json(fullSale);
+  } catch (error) {
+    if (!t.finished) {
+      await t.rollback();
+    }
+    res.status(500).json({
+      message: "Server error while registering payment",
+      error: error.message,
+    });
+  }
+};
+
+// Historial de transacciones con filtros de marca y rango de fechas
+export const getSalesHistory = async (req, res) => {
+  try {
+    const {
+      marca,
+      dateFrom,
+      dateTo,
+      status,
+      search,
+      page = 1,
+      limit = 25,
+    } = req.query;
+    const where = {};
+
+    if (marca) where.marca = marca;
+    if (status) where.status = status;
+
+    if (dateFrom || dateTo) {
+      where.created_at = {};
+      if (dateFrom) where.created_at[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) where.created_at[Op.lte] = new Date(`${dateTo}T23:59:59`);
+    }
+
+    if (search) {
+      where[Op.or] = [
+        { folio: { [Op.like]: `%${search}%` } },
+        { "$customer.name$": { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const { rows, count } = await Sale.findAndCountAll({
+      where,
+      include: saleIncludes,
+      order: [["created_at", "DESC"]],
+      limit: Number(limit),
+      offset,
+      subQuery: false,
+      distinct: true,
+    });
+
+    res.status(200).json({
+      sales: rows,
+      total: count,
+      page: Number(page),
+      totalPages: Math.ceil(count / Number(limit)),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching sales history",
+      error: error.message,
+    });
+  }
+};
+
+export const getSaleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sale = await Sale.findByPk(id, { include: saleIncludes });
+
+    if (!sale) {
+      return res.status(404).json({ message: "Venta no encontrada" });
+    }
+
+    res.status(200).json(sale);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching sale",
+      error: error.message,
+    });
+  }
+};
+
+// Ingresos del día (Dashboard)
+export const getTodayIncome = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const result = await Sale.sum("amountPaid", {
+      where: {
+        created_at: { [Op.between]: [startOfDay, endOfDay] },
+        status: { [Op.ne]: "Cancelada" },
+      },
+    });
+
+    res.status(200).json({ totalIncome: result || 0 });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching today's income",
+      error: error.message,
+    });
+  }
+};
+
+// Resumen mensual (Ingresos page): totales, saldos pendientes, ventas concluidas
+export const getMonthlySummary = async (req, res) => {
+  try {
+    const { year, month, marca } = req.query;
+
+    if (!year || !month) {
+      return res.status(400).json({ message: "Se requiere año y mes" });
+    }
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const where = {
+      created_at: { [Op.between]: [startDate, endDate] },
+    };
+    if (marca) where.marca = marca;
+
+    const sales = await Sale.findAll({ where });
+
+    const totalIncome = sales.reduce(
+      (sum, s) => sum + parseFloat(s.amountPaid),
+      0,
+    );
+    const pendingBalance = sales.reduce(
+      (sum, s) => sum + (parseFloat(s.totalAmount) - parseFloat(s.amountPaid)),
+      0,
+    );
+    const completedSales = sales.filter((s) => s.status === "Liquidada").length;
+
+    res.status(200).json({
+      totalIncome,
+      pendingBalance,
+      completedSales,
+      totalSales: sales.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching monthly summary",
+      error: error.message,
+    });
+  }
+};

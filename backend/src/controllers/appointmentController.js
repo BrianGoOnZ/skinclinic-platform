@@ -3,6 +3,7 @@ import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
 import Service from "../models/Service.js";
 import User from "../models/User.js";
+import Sale from "../models/Sale.js";
 
 const appointmentIncludes = [
   {
@@ -12,6 +13,7 @@ const appointmentIncludes = [
   },
   { model: Service, as: "service", attributes: ["serviceId", "name", "brand"] },
   { model: User, as: "collaborator", attributes: ["id", "name"] },
+  { model: Sale, as: "sale", attributes: ["saleId", "folio", "status"] },
 ];
 
 const conflictIncludes = [
@@ -219,6 +221,29 @@ export const updateAppointmentStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while updating status",
+      error: error.message,
+    });
+  }
+};
+
+export const getPendingCheckouts = async (req, res) => {
+  try {
+    const appointments = await Appointment.findAll({
+      where: { status: "Completada" },
+      include: [
+        { model: Customer, as: "customer", attributes: ["name"] },
+        { model: Service, as: "service", attributes: ["name"] },
+        { model: Sale, as: "sale", attributes: ["saleId"] },
+      ],
+      order: [["startTime", "DESC"]],
+    });
+
+    const pending = appointments.filter((a) => !a.sale);
+
+    res.status(200).json(pending);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error while fetching pending checkouts",
       error: error.message,
     });
   }

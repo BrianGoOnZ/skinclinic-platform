@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import { LuSearch } from "react-icons/lu";
+import { LuSearch, LuEye } from "react-icons/lu";
+import AssessmentDetailModal from "../components/AssessmentDetailModal";
 
 const AssessmentHistoryPage = () => {
   const [modelhaRecords, setModelhaRecords] = useState([]);
@@ -8,6 +9,10 @@ const AssessmentHistoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Estados para el detalle del expediente
+  const [selectedAssessment, setSelectedAssessment] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -29,6 +34,26 @@ const AssessmentHistoryPage = () => {
 
     fetchAll();
   }, []);
+
+  const handleViewDetail = async (record) => {
+    try {
+      setDetailLoading(true);
+      const isModelha = record.brand === "Modelha DK";
+      const numericId = record.id.replace(
+        isModelha ? "modelha-" : "laser-",
+        "",
+      );
+      const endpoint = isModelha
+        ? `/assessments/${numericId}`
+        : `/laser-assessments/${numericId}`;
+      const response = await api.get(endpoint);
+      setSelectedAssessment(response.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const combined = [
     ...modelhaRecords.map((r) => ({
@@ -89,9 +114,9 @@ const AssessmentHistoryPage = () => {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-150">
               <thead>
-                <tr className="border-b border-gray-100 bg-gradient-to-r from-secondary/5 to-depil/5">
+                <tr className="border-b border-gray-100 bg-linear-to-r from-secondary/5 to-depil/5">
                   <th className="p-4 text-xs font-bold text-primary">
                     Cliente
                   </th>
@@ -99,6 +124,9 @@ const AssessmentHistoryPage = () => {
                   <th className="p-4 text-xs font-bold text-primary">Fecha</th>
                   <th className="p-4 text-xs font-bold text-primary">
                     Detalle
+                  </th>
+                  <th className="p-4 text-xs font-bold text-primary text-right">
+                    Ver
                   </th>
                 </tr>
               </thead>
@@ -138,6 +166,16 @@ const AssessmentHistoryPage = () => {
                     <td className="p-4 text-sm text-gray-600 max-w-xs truncate">
                       {record.reason}
                     </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleViewDetail(record)}
+                        disabled={detailLoading}
+                        className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer disabled:opacity-50"
+                        title="Ver expediente completo"
+                      >
+                        <LuEye size={18} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -145,6 +183,12 @@ const AssessmentHistoryPage = () => {
           </div>
         )}
       </div>
+
+      <AssessmentDetailModal
+        isOpen={Boolean(selectedAssessment)}
+        assessment={selectedAssessment}
+        onClose={() => setSelectedAssessment(null)}
+      />
     </div>
   );
 };
