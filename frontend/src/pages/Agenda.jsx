@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
@@ -50,11 +50,17 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
   const [viewingAppointment, setViewingAppointment] = useState(null);
   const [currentView, setCurrentView] = useState(Views.MONTH);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [directCheckoutAppointment, setDirectCheckoutAppointment] =
+    useState(null);
 
   const isAdmin = currentUserRole === "Administrador";
-  const monthAccent = MONTH_ACCENTS[currentDate.getMonth()];
 
-  const fetchAppointments = async () => {
+  const monthAccent = useMemo(
+    () => MONTH_ACCENTS[currentDate.getMonth()],
+    [currentDate],
+  );
+
+  const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get("/appointments");
@@ -66,26 +72,28 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [fetchAppointments]);
 
-  const events = appointments
-    .filter((appt) => appt.startTime && appt.endTime)
-    .map((appt) => ({
-      id: appt.appointmentId,
-      title: `${appt.status === "Completada" && !appt.sale ? "💲 " : ""}${appt.customer?.name || "Cliente"} · ${appt.service?.name || ""}`,
-      start: new Date(appt.startTime),
-      end: new Date(appt.endTime),
-      marca: appt.marca,
-      status: appt.status,
-      needsCheckout: appt.status === "Completada" && !appt.sale,
-      resource: appt,
-    }));
+  const events = useMemo(() => {
+    return appointments
+      .filter((appt) => appt.startTime && appt.endTime)
+      .map((appt) => ({
+        id: appt.appointmentId,
+        title: `${appt.status === "Completada" && !appt.sale ? "💲 " : ""}${appt.customer?.name || "Cliente"} · ${appt.service?.name || ""}`,
+        start: new Date(appt.startTime),
+        end: new Date(appt.endTime),
+        marca: appt.marca,
+        status: appt.status,
+        needsCheckout: appt.status === "Completada" && !appt.sale,
+        resource: appt,
+      }));
+  }, [appointments]);
 
-  const eventPropGetter = (event) => {
+  const eventPropGetter = useCallback((event) => {
     const statusColor = STATUS_META[event.status]?.color || "#5b9fa6";
     const brandColor = BRAND_COLORS[event.marca] || "#5b9fa6";
     return {
@@ -97,33 +105,33 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
         boxShadow: event.needsCheckout ? "0 0 0 2px #dc2626 inset" : "none",
       },
     };
-  };
+  }, []);
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingAppointment(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const [directCheckoutAppointment, setDirectCheckoutAppointment] =
-    useState(null);
-
-  const handleSelectEvent = (event) => {
-    if (event.needsCheckout && isAdmin) {
-      setDirectCheckoutAppointment({
-        appointmentId: event.resource.appointmentId,
-        customer: event.resource.customer,
-        marca: event.resource.marca,
-        service: event.resource.service,
-      });
-      return;
-    }
-    if (isAdmin) {
-      setEditingAppointment(event.resource);
-      setIsModalOpen(true);
-    } else {
-      setViewingAppointment(event.resource);
-    }
-  };
+  const handleSelectEvent = useCallback(
+    (event) => {
+      if (event.needsCheckout && isAdmin) {
+        setDirectCheckoutAppointment({
+          appointmentId: event.resource.appointmentId,
+          customer: event.resource.customer,
+          marca: event.resource.marca,
+          service: event.resource.service,
+        });
+        return;
+      }
+      if (isAdmin) {
+        setEditingAppointment(event.resource);
+        setIsModalOpen(true);
+      } else {
+        setViewingAppointment(event.resource);
+      }
+    },
+    [isAdmin],
+  );
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
@@ -181,6 +189,9 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
               onNavigate={setCurrentDate}
               eventPropGetter={eventPropGetter}
               onSelectEvent={handleSelectEvent}
+              components={{
+                event: ({ title }) => <span>{title}</span>,
+              }}
               messages={{
                 next: "Sig.",
                 previous: "Ant.",
@@ -207,7 +218,7 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
         appointment={viewingAppointment}
         onClose={() => setViewingAppointment(null)}
         onAttend={
-          currentUserRole !== "Administrador"
+          !isAdmin
             ? (appointmentId) => {
                 setViewingAppointment(null);
                 onAttendAppointment(appointmentId);
@@ -215,6 +226,7 @@ const Agenda = ({ currentUserRole, onAttendAppointment }) => {
             : undefined
         }
       />
+
       <CheckoutModal
         isOpen={Boolean(directCheckoutAppointment)}
         appointment={directCheckoutAppointment}
