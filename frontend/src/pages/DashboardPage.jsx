@@ -38,6 +38,16 @@ const DashboardPage = ({ userRole }) => {
   const [performance, setPerformance] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
 
+  // 🔹 Función corregida para extraer 1er nombre + 1er apellido
+  const formatShortName = (fullName) => {
+    if (!fullName) return "—";
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0]} ${parts[1]}`; // 👈 Corregido a backticks
+    }
+    return fullName;
+  };
+
   const formatCurrency = (value) =>
     new Intl.NumberFormat("es-MX", {
       style: "currency",
@@ -148,8 +158,9 @@ const DashboardPage = ({ userRole }) => {
             <div className="flex flex-col gap-3">
               {performance.map((p) => (
                 <div key={p.userId} className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-primary w-28 shrink-0 truncate">
-                    {p.name}
+                  {/* 🔹 Aquí llamamos formatShortName y damos min-w-32 sin truncate */}
+                  <span className="text-xs font-semibold text-primary min-w-32 shrink-0">
+                    {formatShortName(p.name)}
                   </span>
                   <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
                     <div
@@ -229,13 +240,13 @@ const DashboardPage = ({ userRole }) => {
                     className="hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="p-3 text-sm font-semibold text-primary">
-                      {appt.customer?.name || "—"}
+                      {formatShortName(appt.customer?.name)}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
                       {appt.service?.name || "—"}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {appt.collaborator?.name || "Sin asignar"}
+                      {formatShortName(appt.collaborator?.name)}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
                       {formatTime(appt.startTime)}

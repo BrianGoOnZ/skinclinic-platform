@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
-import { LuSearch, LuEye } from "react-icons/lu";
-import AssessmentDetailModal from "../components/AssessmentDetailModal";
+import { LuSearch, LuFileText } from "react-icons/lu";
+import LatestAssessmentPage from "./LatestAssessmentPage";
 
 const AssessmentHistoryPage = () => {
   const [modelhaRecords, setModelhaRecords] = useState([]);
@@ -10,9 +10,8 @@ const AssessmentHistoryPage = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Estados para el detalle del expediente
-  const [selectedAssessment, setSelectedAssessment] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [viewingCustomerForAssessment, setViewingCustomerForAssessment] =
+    useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -22,11 +21,12 @@ const AssessmentHistoryPage = () => {
           api.get("/assessments/all"),
           api.get("/laser-assessments/all"),
         ]);
-        setModelhaRecords(modelhaRes.data);
-        setLaserRecords(laserRes.data);
+        setModelhaRecords(modelhaRes.data || []);
+        setLaserRecords(laserRes.data || []);
         setError("");
       } catch (err) {
         setError("No se pudo cargar el historial de expedientes.");
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -35,42 +35,35 @@ const AssessmentHistoryPage = () => {
     fetchAll();
   }, []);
 
-  const handleViewDetail = async (record) => {
-    try {
-      setDetailLoading(true);
-      const isModelha = record.brand === "Modelha DK";
-      const numericId = record.id.replace(
-        isModelha ? "modelha-" : "laser-",
-        "",
-      );
-      const endpoint = isModelha
-        ? `/assessments/${numericId}`
-        : `/laser-assessments/${numericId}`;
-      const response = await api.get(endpoint);
-      setSelectedAssessment(response.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setDetailLoading(false);
-    }
+  const handleOpenAssessmentPage = (record) => {
+    const customerObj = record.customer || {
+      customerId: record.customerId,
+      name: record.customerName,
+      phone: record.customerPhone,
+    };
+    setViewingCustomerForAssessment(customerObj);
   };
 
   const combined = [
     ...modelhaRecords.map((r) => ({
       id: `modelha-${r.assessmentId}`,
+      customerId: r.customerId || r.customer?.customerId,
       customerName: r.customer?.name || "—",
       customerPhone: r.customer?.phone || "",
+      customer: r.customer,
       brand: "Modelha DK",
       createdAt: r.createdAt || r.created_at,
-      reason: r.consultationReason,
+      reason: r.consultationReason || "Consulta General",
     })),
     ...laserRecords.map((r) => ({
       id: `laser-${r.laserAssessmentId}`,
+      customerId: r.customerId || r.customer?.customerId,
       customerName: r.customer?.name || "—",
       customerPhone: r.customer?.phone || "",
+      customer: r.customer,
       brand: "Depilclinik",
       createdAt: r.createdAt || r.created_at,
-      reason: r.referredMedia,
+      reason: r.referredMedia || "Depilación Láser",
     })),
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -82,6 +75,15 @@ const AssessmentHistoryPage = () => {
     "Modelha DK": "bg-secondary/10 text-secondary",
     Depilclinik: "bg-depil-soft text-depil",
   };
+
+  if (viewingCustomerForAssessment) {
+    return (
+      <LatestAssessmentPage
+        customer={viewingCustomerForAssessment}
+        onBack={() => setViewingCustomerForAssessment(null)}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
@@ -126,7 +128,7 @@ const AssessmentHistoryPage = () => {
                     Detalle
                   </th>
                   <th className="p-4 text-xs font-bold text-primary text-right">
-                    Ver
+                    Ver Expediente
                   </th>
                 </tr>
               </thead>
@@ -168,12 +170,11 @@ const AssessmentHistoryPage = () => {
                     </td>
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleViewDetail(record)}
-                        disabled={detailLoading}
-                        className="p-1.5 text-accent hover:text-secondary transition-colors cursor-pointer disabled:opacity-50"
-                        title="Ver expediente completo"
+                        onClick={() => handleOpenAssessmentPage(record)}
+                        className="p-1.5 text-accent hover:text-depil transition-colors cursor-pointer"
+                        title="Ver Expediente"
                       >
-                        <LuEye size={18} />
+                        <LuFileText size={16} />
                       </button>
                     </td>
                   </tr>
@@ -183,12 +184,6 @@ const AssessmentHistoryPage = () => {
           </div>
         )}
       </div>
-
-      <AssessmentDetailModal
-        isOpen={Boolean(selectedAssessment)}
-        assessment={selectedAssessment}
-        onClose={() => setSelectedAssessment(null)}
-      />
     </div>
   );
 };

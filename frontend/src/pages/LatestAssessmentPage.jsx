@@ -9,6 +9,25 @@ const LatestAssessmentPage = ({ customer, onBack }) => {
   const [assessment, setAssessment] = useState(null);
   const [brand, setBrand] = useState("Modelha DK");
 
+  const formatAssessmentDate = (assessmentObj) => {
+    const rawDate =
+      assessmentObj?.createdAt ||
+      assessmentObj?.created_at ||
+      assessmentObj?.date ||
+      assessmentObj?.assessmentDate;
+
+    if (!rawDate) return "Fecha no registrada";
+
+    const parsedDate = new Date(rawDate);
+    if (isNaN(parsedDate.getTime())) return "Fecha no registrada";
+
+    return parsedDate.toLocaleDateString("es-MX", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   useEffect(() => {
     const fetchLatest = async () => {
       setLoading(true);
@@ -61,7 +80,7 @@ const LatestAssessmentPage = ({ customer, onBack }) => {
             onClick={() => setBrand(b)}
             className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
               brand === b
-                ? "bg-gradient-to-r from-secondary to-depil text-white"
+                ? "bg-linear-to-r from-secondary to-depil text-white"
                 : "border border-borderClinik text-primary hover:bg-gray-50"
             }`}
           >
@@ -85,13 +104,8 @@ const LatestAssessmentPage = ({ customer, onBack }) => {
           </p>
         ) : (
           <>
-            <p className="text-xs text-accent mb-4">
-              Sesión del{" "}
-              {new Date(assessment.createdAt).toLocaleDateString("es-MX", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
+            <p className="text-xs text-accent mb-4 font-semibold">
+              Sesión del {formatAssessmentDate(assessment)}
             </p>
             <AssessmentSummaryView assessment={assessment} />
           </>

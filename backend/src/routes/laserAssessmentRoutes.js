@@ -5,6 +5,7 @@ import {
   getLaserAssessmentByAppointment,
   createLaserAssessment,
   getAllLaserAssessments,
+  getLaserAssessmentById,
 } from "../controllers/laserAssessmentController.js";
 import {
   protect,
@@ -47,6 +48,13 @@ router.post(
   protect,
   canAttendAppointment,
   createLaserAssessment,
+);
+
+router.get(
+  "/:id",
+  protect,
+  restrictTo("Administrador"),
+  getLaserAssessmentById,
 );
 
 export default router;

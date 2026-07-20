@@ -5,6 +5,19 @@ import AssessmentSummaryView from "./clinicalRecord/AssessmentSummaryView";
 const AssessmentDetailModal = ({ isOpen, assessment, onClose }) => {
   if (!isOpen) return null;
 
+  // 🔹 Evita que el modal truene si createdAt/created_at es undefined o fecha inválida
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "";
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime())
+      ? ""
+      : ` · ${parsed.toLocaleDateString("es-MX", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col text-left">
@@ -15,15 +28,7 @@ const AssessmentDetailModal = ({ isOpen, assessment, onClose }) => {
             </h2>
             <p className="text-xs text-accent">
               {assessment?.customer?.name || "Cliente"}
-              {assessment?.createdAt &&
-                ` · ${new Date(assessment.createdAt).toLocaleDateString(
-                  "es-MX",
-                  {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  },
-                )}`}
+              {formatDate(assessment?.createdAt || assessment?.created_at)}
             </p>
           </div>
           <button

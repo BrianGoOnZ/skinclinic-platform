@@ -19,7 +19,7 @@ export const getLatestLaserAssessmentByCustomer = async (req, res) => {
     const assessment = await LaserMedicalAssessment.findOne({
       where: { customerId },
       include: fullIncludes,
-      order: [["created_at", "DESC"]],
+      order: [[sequelize.col("created_at"), "DESC"]],
     });
 
     if (!assessment) {
@@ -45,7 +45,7 @@ export const getLaserAssessmentHistoryByCustomer = async (req, res) => {
     const assessments = await LaserMedicalAssessment.findAll({
       where: { customerId },
       include: fullIncludes,
-      order: [["created_at", "DESC"]],
+      order: [[sequelize.col("created_at"), "DESC"]],
     });
 
     res.status(200).json(assessments);
@@ -57,8 +57,7 @@ export const getLaserAssessmentHistoryByCustomer = async (req, res) => {
   }
 };
 
-// Expediente ligado a una cita específica (req.appointment ya viene
-// validado por canAttendAppointment)
+// Expediente ligado a una cita específica
 export const getLaserAssessmentByAppointment = async (req, res) => {
   try {
     const appointment = req.appointment;
@@ -162,8 +161,6 @@ export const createLaserAssessment = async (req, res) => {
 
     await t.commit();
 
-    await t.commit();
-
     const fullAssessment = await LaserMedicalAssessment.findByPk(
       assessment.laserAssessmentId,
       { include: fullIncludes },
@@ -189,7 +186,7 @@ export const getAllLaserAssessments = async (req, res) => {
           attributes: ["customerId", "name", "phone"],
         },
       ],
-      order: [["created_at", "DESC"]],
+      order: [[sequelize.col("created_at"), "DESC"]],
     });
 
     res.status(200).json(assessments);

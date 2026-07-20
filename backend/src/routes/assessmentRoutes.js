@@ -5,6 +5,7 @@ import {
   getAssessmentByAppointment,
   createAssessment,
   getAllAssessments,
+  getAssessmentById,
 } from "../controllers/assessmentController.js";
 import {
   protect,
@@ -14,7 +15,6 @@ import {
 
 const router = express.Router();
 
-// Vista rápida en CustomersPage: solo Administrador
 router.get(
   "/customer/:customerId/latest",
   protect,
@@ -22,7 +22,6 @@ router.get(
   getLatestAssessmentByCustomer,
 );
 
-// Botón "Ver más": historial completo, solo Administrador
 router.get(
   "/customer/:customerId/history",
   protect,
@@ -32,8 +31,6 @@ router.get(
 
 router.get("/all", protect, restrictTo("Administrador"), getAllAssessments);
 
-// Acceso para llenar el expediente de una cita específica
-// (Administrador siempre; Colaborador solo si la cita es suya y no está bloqueada)
 router.get(
   "/appointment/:appointmentId",
   protect,
@@ -47,5 +44,7 @@ router.post(
   canAttendAppointment,
   createAssessment,
 );
+
+router.get("/:id", protect, restrictTo("Administrador"), getAssessmentById);
 
 export default router;
