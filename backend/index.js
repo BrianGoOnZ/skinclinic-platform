@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
 import sequelize from "./src/config/db.js";
 
 // Modelos necesarios
@@ -23,6 +24,8 @@ dotenv.config();
 
 const app = express();
 
+// Middlewares de seguridad y parseo
+app.use(helmet());
 app.use(
   cors({
     origin: "http://localhost:5173",

@@ -73,17 +73,16 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Buscamos validando que la cuenta esté activa
-    const user = await User.findOne({ where: { email, isActive: true } });
-    if (!user) {
+    const user = await User.findOne({ where: { email } });
+    if (!user || user.is_active === false) {
       return res
         .status(401)
-        .json({ message: "Invalid credentials or inactive account" });
+        .json({ message: "Credenciales inválidas o cuenta inactiva" });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
     const accessToken = generateAccessToken(user);
@@ -102,21 +101,25 @@ export const login = async (req, res) => {
     });
     res.cookie("refreshToken", refreshToken, cookieOptions);
 
-    // Agregamos mustChangePassword a la respuesta del login para que el Frontend sepa si desviarlo o no
     res.status(200).json({
-      message: "Login successful",
+      message: "Login exitoso",
       user: {
-        id: user.publicId,
+        id: user.public_id || user.publicId,
         name: user.name,
-        role: user.role,
+        role: user.rol || user.role,
         gender: user.gender,
-        mustChangePassword: user.mustChangePassword,
+        mustChangePassword:
+          user.must_change_password ?? user.mustChangePassword,
       },
     });
   } catch (error) {
+    console.error("Error en login:", error);
     res
       .status(500)
-      .json({ message: "Server error during login", error: error.message });
+      .json({
+        message: "Error del servidor durante el login",
+        error: error.message,
+      });
   }
 };
 
@@ -192,29 +195,24 @@ export const changePassword = async (req, res) => {
 // Verifica la sesión activa a partir de la cookie (usado al refrescar la página)
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: [
-        "id",
-        "publicId",
-        "name",
-        "email",
-        "role",
-        "mustChangePassword",
-      ],
-    });
-    if (!user)
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
     res.status(200).json({
       user: {
-        id: user.publicId,
+        id: user.public_id || user.publicId,
         name: user.name,
         email: user.email,
-        role: user.role,
-        mustChangePassword: user.mustChangePassword,
+        role: user.rol || user.role,
+        gender: user.gender,
+        mustChangePassword:
+          user.must_change_password ?? user.mustChangePassword,
       },
     });
   } catch (error) {
+    console.error("Error en getMe:", error);
     res
       .status(500)
       .json({ message: "Error al verificar la sesión", error: error.message });

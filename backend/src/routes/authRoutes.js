@@ -13,11 +13,15 @@ import {
   refreshToken,
 } from "../controllers/authController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
+import { loginLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
-router.post("/login", login);
+// Auth pública con Rate Limiting en Login
+router.post("/login", loginLimiter, login);
 router.post("/refresh", refreshToken);
+
+// Rutas autenticadas de sesión
 router.get("/me", protect, getMe);
 router.post("/logout", protect, logout);
 router.post("/change-password", protect, changePassword);
@@ -40,6 +44,7 @@ router.patch(
   reactivateUser,
 );
 
+// Verificación de roles para pruebas
 router.get("/dashboard-general", protect, (req, res) => {
   res
     .status(200)

@@ -12,14 +12,14 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-      field: "user_id", // Mapea correctamente a user_id de la BD
+      field: "user_id",
     },
     publicId: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
       unique: true,
-      field: "public_id", // Mapea correctamente a public_id de la BD
+      field: "public_id",
     },
     name: {
       type: DataTypes.STRING(255),
@@ -27,7 +27,7 @@ const User = sequelize.define(
     },
     phone: {
       type: DataTypes.STRING(10),
-      allowNull: false, // Requerido en tu SQL
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING(191),
@@ -47,7 +47,7 @@ const User = sequelize.define(
     },
     gender: {
       type: DataTypes.ENUM("H", "M", "ND"),
-      allowNull: false, // Requerido en tu SQL
+      allowNull: false,
     },
     address: {
       type: DataTypes.TEXT,
@@ -77,26 +77,26 @@ const User = sequelize.define(
       type: DataTypes.ENUM("Administrador", "Colaborador"),
       allowNull: false,
       defaultValue: "Colaborador",
-      field: "rol", // Mapea a la columna 'rol' en español
+      field: "rol",
     },
     isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
-      field: "is_active", // Mapea a 'is_active' para la baja lógica
+      field: "is_active",
     },
     mustChangePassword: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
-      field: "must_change_password", // Mapea al nuevo campo de la BD
+      field: "must_change_password",
     },
   },
   {
-    tableName: "Users", // Nota la 'U' mayúscula como en tu SQL
+    tableName: "Users",
     timestamps: true,
-    createdAt: "created_at", // Mapea al campo nativo de tu SQL
-    updatedAt: false, // Tu SQL no tiene updated_at, lo desactivamos para evitar errores
+    createdAt: "created_at",
+    updatedAt: false,
     hooks: {
       beforeCreate: async (user) => {
         if (user.password) {
@@ -116,6 +116,11 @@ const User = sequelize.define(
 
 User.prototype.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
+};
+User.prototype.toJSON = function () {
+  const values = { ...this.get() };
+  delete values.password;
+  return values;
 };
 
 User.hasMany(MedicalAssessment, {

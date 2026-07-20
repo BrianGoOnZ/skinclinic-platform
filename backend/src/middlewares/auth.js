@@ -2,67 +2,71 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 
-// Generar Access Token (Corta duración: 15 min)
+// Generar Access Token (15 min)
 export const generateAccessToken = (user) => {
+  // Usamos user.user_id o user.id de forma segura
+  const idToSign = user.user_id || user.id;
+  const roleToSign = user.rol || user.role;
+
   return jwt.sign(
-    { id: user.id, role: user.role },
+    { id: idToSign, role: roleToSign },
     process.env.JWT_ACCESS_SECRET,
     { expiresIn: "15m" },
   );
 };
 
-// Generar Refresh Token (Larga duración: 8h)
+// Generar Refresh Token (8h)
 export const generateRefreshToken = (user) => {
-  return jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET, {
+  const idToSign = user.user_id || user.id;
+  return jwt.sign({ id: idToSign }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: "8h",
   });
 };
 
-// Intercepta la petición y valida que el usuario esté logueado mediante su cookie
+// Middleware para proteger rutas mediante cookies HTTPOnly
 export const protect = async (req, res, next) => {
   try {
-    const token = req.cookies.accessToken;
+    const token = req.cookies?.accessToken;
 
     if (!token) {
-      return res.status(401).json({ message: "Not authorized, token missing" });
+      return res.status(401).json({ message: "No autorizado, falta token" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    const user = await User.findByPk(decoded.id, {
-      attributes: ["id", "role", "isActive"],
-    });
+    const user = await User.findByPk(decoded.id);
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: "Account inactive or not found" });
+    if (!user || (!user.is_active && user.isActive === false)) {
+      return res
+        .status(401)
+        .json({ message: "Cuenta inactiva o no encontrada" });
     }
 
-    req.user = { id: user.id, role: user.role };
+    req.user = {
+      id: user.user_id || user.id,
+      role: user.rol || user.role,
+    };
     next();
   } catch (error) {
     return res.status(401).json({
-      message: "Not authorized, token expired or invalid",
+      message: "No autorizado, token expirado o inválido",
       error: error.message,
     });
   }
 };
 
-// Restringe el acceso solo a los roles permitidos (Admin / Collaborator)
+// Restringir acceso por rol
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res
         .status(403)
-        .json({ message: "You do not have permission to perform this action" });
+        .json({ message: "No tienes permisos para realizar esta acción" });
     }
     next();
   };
 };
 
-// Verifica que el usuario pueda atender clínicamente una cita específica:
-// - Administrador: acceso total, sin restricciones.
-// - Colaborador: solo si la cita es suya Y el expediente asociado (si existe)
-//   no está ya bloqueado por haberse guardado antes.
 export const canAttendAppointment = async (req, res, next) => {
   try {
     const { appointmentId } = req.params;
@@ -80,7 +84,10 @@ export const canAttendAppointment = async (req, res, next) => {
       return next();
     }
 
-    if (appointment.userId !== req.user.id) {
+    if (
+      appointment.userId !== req.user.id &&
+      appointment.user_id !== req.user.id
+    ) {
       return res.status(403).json({
         message: "Esta cita no está asignada a tu usuario",
       });

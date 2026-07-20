@@ -168,13 +168,14 @@ const LoginSPA = ({ onLoginSuccess }) => {
                       Nueva Contraseña
                     </label>
                     <input
-                      id="newPassword"
                       type="password"
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Password"
+                      aria-label="Contraseña"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
+                      className="w-full bg-transparent text-sm text-primary focus:outline-none placeholder-accent/70"
                     />
                   </div>
 
@@ -252,6 +253,7 @@ const LoginSPA = ({ onLoginSuccess }) => {
                       type="email"
                       placeholder="Email"
                       aria-label="Correo Electrónico"
+                      autoComplete="username"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -277,6 +279,7 @@ const LoginSPA = ({ onLoginSuccess }) => {
                       type="password"
                       placeholder="Password"
                       aria-label="Contraseña"
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
