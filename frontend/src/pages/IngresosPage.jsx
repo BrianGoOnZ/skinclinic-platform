@@ -6,6 +6,8 @@ import {
   LuFilter,
   LuDownload,
   LuWallet,
+  LuChevronLeft,
+  LuChevronRight,
 } from "react-icons/lu";
 import SaleDetailModal from "../components/SaleDetailModal";
 import { showLoading, closeAlert, showError } from "../utils/alerts";
@@ -14,6 +16,31 @@ const STATUS_COLORS = {
   Liquidada: "bg-emerald-50 text-emerald-600",
   "Con adeudo": "bg-amber-50 text-amber-600",
   Cancelada: "bg-red-50 text-red-600",
+};
+
+const BRAND_COLORS = {
+  "Modelha DK": "#197e88",
+  Depilclinik: "#c0247d",
+};
+
+const MONTH_LABELS_ES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+const getCurrentYearMonth = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
 // Calcula el rango de un mes respetando la regla de negocio:
@@ -43,6 +70,11 @@ const getCurrentMonthRange = () => {
   return { from, to, year, month };
 };
 
+const formatMonthLabel = (yearMonthStr) => {
+  const [year, month] = yearMonthStr.split("-").map(Number);
+  return `${MONTH_LABELS_ES[month - 1]} ${year}`;
+};
+
 const IngresosPage = () => {
   const defaultRange = getCurrentMonthRange();
 
@@ -56,14 +88,8 @@ const IngresosPage = () => {
   const [activeTab, setActiveTab] = useState("historial");
 
   const [marca, setMarca] = useState("");
-  const [dateFrom, setDateFrom] = useState(defaultRange.from);
-  const [dateTo, setDateTo] = useState(defaultRange.to);
   const [search, setSearch] = useState("");
-
-  const [exportMonth, setExportMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth());
 
   const [summary, setSummary] = useState({
     totalIncome: 0,
@@ -74,6 +100,26 @@ const IngresosPage = () => {
 
   const [selectedSale, setSelectedSale] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const { from: dateFrom, to: dateTo } = getExportRangeForMonth(selectedMonth);
+  const isCurrentMonth = selectedMonth === getCurrentYearMonth();
+
+  const handlePrevMonth = () => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const prevDate = new Date(year, month - 2, 1);
+    setSelectedMonth(
+      `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`,
+    );
+  };
+
+  const handleNextMonth = () => {
+    if (isCurrentMonth) return;
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const nextDate = new Date(year, month, 1);
+    setSelectedMonth(
+      `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}`,
+    );
+  };
 
   const fetchSales = useCallback(async () => {
     try {
@@ -120,7 +166,7 @@ const IngresosPage = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const [year, month] = dateFrom.split("-");
+      const [year, month] = selectedMonth.split("-");
       const response = await api.get("/sales/monthly-summary", {
         params: { year, month, marca: marca || undefined },
       });
@@ -128,7 +174,7 @@ const IngresosPage = () => {
     } catch (err) {
       console.error(err);
     }
-  }, [dateFrom, marca]);
+  }, [selectedMonth, marca]);
 
   useEffect(() => {
     if (activeTab === "historial") {
@@ -144,7 +190,7 @@ const IngresosPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [marca, dateFrom, dateTo, search]);
+  }, [marca, selectedMonth, search]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -183,7 +229,7 @@ const IngresosPage = () => {
     });
 
   const handleExportPdf = async () => {
-    const { from, to } = getExportRangeForMonth(exportMonth);
+    const { from, to } = getExportRangeForMonth(selectedMonth);
 
     try {
       showLoading("Generando reporte PDF...");
@@ -202,7 +248,7 @@ const IngresosPage = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `reporte-ingresos-${exportMonth}.pdf`;
+      link.download = `reporte-ingresos-${selectedMonth}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -221,69 +267,95 @@ const IngresosPage = () => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-wrap">
-        <div className="flex items-center gap-2 text-xs font-bold text-accent shrink-0">
+      <div className="bg-white rounded-3xl border border-gray-200/80 shadow-[0_8px_30px_rgba(1,36,56,0.06)] p-4 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-accent shrink-0">
           <LuFilter size={14} /> Filtros
         </div>
 
-        <select
-          value={marca}
-          onChange={(e) => setMarca(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold bg-white focus:outline-none focus:border-secondary"
-        >
-          <option value="">Todas las marcas</option>
-          <option value="Modelha DK">Modelha DK</option>
-          <option value="Depilclinik">Depilclinik</option>
-        </select>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {["", "Modelha DK", "Depilclinik"].map((brand) => {
+            const isActive = marca === brand;
+            const color = brand ? BRAND_COLORS[brand] : "#012438";
+            return (
+              <button
+                key={brand || "todas"}
+                type="button"
+                onClick={() => setMarca(brand)}
+                className="px-3.5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border shadow-sm hover:-translate-y-0.5"
+                style={
+                  isActive
+                    ? {
+                        backgroundColor: color,
+                        borderColor: color,
+                        color: "#fff",
+                      }
+                    : {
+                        borderColor: "#e5e7eb",
+                        color: "#6b7280",
+                        backgroundColor: "#fff",
+                      }
+                }
+              >
+                {brand || "Todas"}
+              </button>
+            );
+          })}
+        </div>
 
         {activeTab === "historial" && (
-          <>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
-            />
-            <span className="text-xs text-accent">a</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
-            />
-          </>
+          <div className="flex items-center gap-1 bg-linear-to-r from-secondary/8 to-depil/8 border border-secondary/15 rounded-full px-1.5 py-1.5 shrink-0 shadow-sm">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-white transition-colors cursor-pointer shadow-sm"
+              title="Mes anterior"
+            >
+              <LuChevronLeft size={16} />
+            </button>
+            <span className="px-3 text-sm font-black text-primary min-w-32 text-center">
+              {formatMonthLabel(selectedMonth)}
+            </span>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              disabled={isCurrentMonth}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-white transition-colors cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              title="Mes siguiente"
+            >
+              <LuChevronRight size={16} />
+            </button>
+            {!isCurrentMonth && (
+              <button
+                type="button"
+                onClick={() => setSelectedMonth(getCurrentYearMonth())}
+                className="ml-1 px-2.5 py-1.5 rounded-full text-[10px] font-black text-secondary bg-white border border-secondary/20 hover:bg-secondary/10 transition-colors cursor-pointer shadow-sm"
+              >
+                Hoy
+              </button>
+            )}
+          </div>
         )}
 
-        <div className="relative flex-1 min-w-50">
+        <div className="relative flex-1 min-w-56">
           <LuSearch
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-accent"
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary"
           />
           <input
             type="text"
             placeholder="Buscar por folio o cliente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl border border-borderClinik text-xs focus:outline-none focus:border-secondary bg-white"
+            className="w-full pl-10 pr-4 py-2.75 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-gray-50/70 transition-all"
           />
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <input
-            type="month"
-            value={exportMonth}
-            max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`}
-            onChange={(e) => setExportMonth(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
-            title="Mes a exportar"
-          />
-          <button
-            onClick={handleExportPdf}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
-          >
-            <LuDownload size={14} /> Exportar PDF
-          </button>
-        </div>
+        <button
+          onClick={handleExportPdf}
+          className="flex items-center gap-2 px-5 py-2.75 rounded-full bg-linear-to-r from-secondary to-depil text-white font-black text-sm hover:shadow-lg hover:opacity-95 transition-all cursor-pointer shrink-0"
+        >
+          <LuDownload size={15} /> Exportar PDF
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
