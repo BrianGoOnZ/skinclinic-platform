@@ -6,7 +6,6 @@ import {
   generateRefreshToken,
 } from "../middlewares/auth.js";
 
-// Registro de Usuarios (Expediente completo + Contraseña Temporal)
 export const register = async (req, res) => {
   try {
     const {
@@ -23,16 +22,13 @@ export const register = async (req, res) => {
       medicalInsuranceNumber,
     } = req.body;
 
-    // Verificar si el correo ya existe
     const userExists = await User.findOne({ where: { email } });
     if (userExists) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // GENERACIÓN DE CONTRASEÑA TEMPORAL
     const temporaryPassword = crypto.randomBytes(5).toString("hex");
 
-    // Pasamos todas las variables requeridas y opcionales a Sequelize
     const newUser = await User.create({
       name,
       email,
@@ -68,7 +64,6 @@ export const register = async (req, res) => {
   }
 };
 
-// 2. Login Seguro con Cookies HTTPOnly
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -101,29 +96,29 @@ export const login = async (req, res) => {
     });
     res.cookie("refreshToken", refreshToken, cookieOptions);
 
+    const mustChangeVal = Boolean(
+      user.must_change_password ?? user.mustChangePassword,
+    );
+
     res.status(200).json({
       message: "Login exitoso",
       user: {
-        id: user.public_id || user.publicId,
+        id: user.public_id || user.publicId || user.id,
         name: user.name,
         role: user.rol || user.role,
         gender: user.gender,
-        mustChangePassword:
-          user.must_change_password ?? user.mustChangePassword,
+        mustChangePassword: mustChangeVal,
       },
     });
   } catch (error) {
     console.error("Error en login:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error del servidor durante el login",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error del servidor durante el login",
+      error: error.message,
+    });
   }
 };
 
-// Obtener todos los colaboradores para la pantalla del Frontend
 export const getAllUsers = async (req, res) => {
   try {
     const usuarios = await User.findAll({
@@ -149,13 +144,9 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// Actualizar la contraseña temporal por la definitiva (Primer Login)
 export const changePassword = async (req, res) => {
   try {
     const { newPassword } = req.body;
-
-    // El middleware 'protect' inyecta al usuario autenticado en req.user
-    // Revisando tu login, el ID se almacena directamente en user.id
     const userId = req.user?.id;
 
     if (!newPassword) {
@@ -170,16 +161,13 @@ export const changePassword = async (req, res) => {
         .json({ message: "La contraseña debe tener al menos 6 caracteres" });
     }
 
-    // Buscamos al usuario por su ID
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Actualizamos la contraseña (aquí el modelo User se encargará de pasarla por bcrypt automáticamente si tienes el hook seteado en tu modelo)
     user.password = newPassword;
-    user.mustChangePassword = false; // Desactivamos el bloqueo
-
+    user.mustChangePassword = false;
     await user.save();
 
     res.status(200).json({ message: "Contraseña actualizada con éxito" });
@@ -192,7 +180,6 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// Verifica la sesión activa a partir de la cookie (usado al refrescar la página)
 export const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
@@ -200,15 +187,18 @@ export const getMe = async (req, res) => {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
+    const mustChangeVal = Boolean(
+      user.must_change_password ?? user.mustChangePassword,
+    );
+
     res.status(200).json({
       user: {
-        id: user.public_id || user.publicId,
+        id: user.public_id || user.publicId || user.id,
         name: user.name,
         email: user.email,
         role: user.rol || user.role,
         gender: user.gender,
-        mustChangePassword:
-          user.must_change_password ?? user.mustChangePassword,
+        mustChangePassword: mustChangeVal,
       },
     });
   } catch (error) {
@@ -219,7 +209,6 @@ export const getMe = async (req, res) => {
   }
 };
 
-// Cierra sesión limpiando las cookies HTTPOnly
 export const logout = async (req, res) => {
   const cookieOptions = {
     httpOnly: true,
@@ -322,7 +311,6 @@ export const reactivateUser = async (req, res) => {
   }
 };
 
-// Renueva el accessToken usando el refreshToken de larga duración
 export const refreshToken = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;

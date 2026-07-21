@@ -51,7 +51,7 @@ const CollaboratorDashboard = ({ userName }) => {
 
       setTodayAppointments(todayRes.data);
       setMonthlyCount(countRes.data.completedCount);
-      setUpcoming(upcomingRes.data);
+      setUpcoming(upcomingRes.data || []);
       setPendingAssessments(pendingRes.data);
       setError("");
     } catch (err) {
@@ -141,7 +141,7 @@ const CollaboratorDashboard = ({ userName }) => {
                       {appt.service?.name || "—"}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {formatTime(appt.startTime)}
+                      {formatTime(appt.startTime || appt.start_time)}
                     </td>
                   </tr>
                 ))}
@@ -184,7 +184,7 @@ const CollaboratorDashboard = ({ userName }) => {
                       {appt.service?.name || "—"}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {formatTime(appt.startTime)}
+                      {formatTime(appt.startTime || appt.start_time)}
                     </td>
                   </tr>
                 ))}

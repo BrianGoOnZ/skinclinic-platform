@@ -24,7 +24,7 @@ const StatCard = ({ icon: Icon, label, value, color = "#197e88" }) => (
   </div>
 );
 
-const DashboardPage = ({ userRole }) => {
+const DashboardPage = ({ userRole, onPendingSalesUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,12 +38,11 @@ const DashboardPage = ({ userRole }) => {
   const [performance, setPerformance] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
 
-  // 🔹 Función corregida para extraer 1er nombre + 1er apellido
   const formatShortName = (fullName) => {
     if (!fullName) return "—";
     const parts = fullName.trim().split(/\s+/);
     if (parts.length >= 2) {
-      return `${parts[0]} ${parts[1]}`; // 👈 Corregido a backticks
+      return `${parts[0]} ${parts[1]}`;
     }
     return fullName;
   };
@@ -71,12 +70,14 @@ const DashboardPage = ({ userRole }) => {
         treatmentsRes,
         performanceRes,
         upcomingRes,
+        pendingSalesRes,
       ] = await Promise.all([
         api.get("/dashboard/today-summary"),
         api.get("/sales/today-income"),
         api.get("/dashboard/top-treatments"),
         api.get("/dashboard/collaborator-performance"),
         api.get("/dashboard/upcoming-appointments"),
+        api.get("/sales/pending-accounts"),
       ]);
 
       setTodaySummary(summaryRes.data);
@@ -84,6 +85,11 @@ const DashboardPage = ({ userRole }) => {
       setTopTreatments(treatmentsRes.data);
       setPerformance(performanceRes.data);
       setUpcoming(upcomingRes.data);
+
+      if (onPendingSalesUpdate) {
+        onPendingSalesUpdate(pendingSalesRes.data || []);
+      }
+
       setError("");
     } catch (err) {
       setError("No se pudo cargar la información del dashboard.");
@@ -95,6 +101,8 @@ const DashboardPage = ({ userRole }) => {
 
   useEffect(() => {
     fetchAll();
+    const interval = setInterval(fetchAll, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const maxPerformanceCount = Math.max(...performance.map((p) => p.count), 1);
@@ -158,7 +166,6 @@ const DashboardPage = ({ userRole }) => {
             <div className="flex flex-col gap-3">
               {performance.map((p) => (
                 <div key={p.userId} className="flex items-center gap-3">
-                  {/* 🔹 Aquí llamamos formatShortName y damos min-w-32 sin truncate */}
                   <span className="text-xs font-semibold text-primary min-w-32 shrink-0">
                     {formatShortName(p.name)}
                   </span>

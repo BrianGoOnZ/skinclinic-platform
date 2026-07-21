@@ -136,13 +136,16 @@ export const getCollaboratorPerformance = async (req, res) => {
   }
 };
 
-// Próximas citas pendientes (no completadas ni canceladas)
 export const getUpcomingAppointments = async (req, res) => {
   try {
+    const startOfTomorrow = new Date();
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    startOfTomorrow.setHours(0, 0, 0, 0);
+
     const appointments = await Appointment.findAll({
       where: {
         status: { [Op.notIn]: ["Completada", "Cancelada"] },
-        startTime: { [Op.gte]: new Date() },
+        startTime: { [Op.gte]: startOfTomorrow }, // 👈 Solo de mañana en adelante
       },
       include: [
         { model: Customer, as: "customer", attributes: ["name", "phone"] },
@@ -216,11 +219,15 @@ export const getMyMonthlyCount = async (req, res) => {
 // Próximas citas asignadas al colaborador (no completadas ni canceladas)
 export const getMyUpcomingAppointments = async (req, res) => {
   try {
+    const startOfTomorrow = new Date();
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    startOfTomorrow.setHours(0, 0, 0, 0);
+
     const appointments = await Appointment.findAll({
       where: {
         userId: req.user.id,
         status: { [Op.notIn]: ["Completada", "Cancelada"] },
-        startTime: { [Op.gte]: new Date() },
+        startTime: { [Op.gte]: startOfTomorrow }, // 👈 Solo de mañana en adelante
       },
       include: [
         { model: Customer, as: "customer", attributes: ["name", "phone"] },

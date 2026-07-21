@@ -33,8 +33,6 @@ const LoginSPA = ({ onLoginSuccess }) => {
       if (loggedUser.mustChangePassword) {
         setMustChangePass(true);
       } else {
-        // 💡 El backend mapea 'gender' en minúscula dentro de la base de datos.
-        // Usamos el 'loggedUser.gender' directo y agregamos una validación por si no se cargó el registro.
         const generoBD = loggedUser.gender
           ? String(loggedUser.gender).toUpperCase().trim()
           : "ND";
@@ -42,17 +40,14 @@ const LoginSPA = ({ onLoginSuccess }) => {
 
         let saludoCompleto = "";
 
-        // Mapeo directo contra tu ENUM ('H', 'M', 'ND')
         if (generoBD === "H") {
           saludoCompleto = `¡Bienvenido de vuelta, ${nombreUsuario}!`;
         } else if (generoBD === "M") {
           saludoCompleto = `¡Bienvenida de vuelta, ${nombreUsuario}!`;
         } else {
-          // Fallback si la respuesta de la base de datos es 'ND'
           saludoCompleto = `¡Hola, ${nombreUsuario}!`;
         }
 
-        // showSuccess(TítuloGrandeEnUnaSolaLínea, MensajeCortoAbajo)
         showSuccess(saludoCompleto, "Inicio de sesión correcto");
         onLoginSuccess(loggedUser);
       }
@@ -168,14 +163,13 @@ const LoginSPA = ({ onLoginSuccess }) => {
                       Nueva Contraseña
                     </label>
                     <input
+                      id="newPassword"
                       type="password"
-                      placeholder="Password"
-                      aria-label="Contraseña"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      className="w-full bg-transparent text-sm text-primary focus:outline-none placeholder-accent/70"
+                      className="w-full p-2.5 rounded-lg border border-borderClinik text-sm focus:outline-none focus:border-secondary"
                     />
                   </div>
 
