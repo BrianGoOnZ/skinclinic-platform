@@ -8,11 +8,29 @@ import {
   LuWallet,
 } from "react-icons/lu";
 import SaleDetailModal from "../components/SaleDetailModal";
+import { showLoading, closeAlert, showError } from "../utils/alerts";
 
 const STATUS_COLORS = {
   Liquidada: "bg-emerald-50 text-emerald-600",
   "Con adeudo": "bg-amber-50 text-amber-600",
   Cancelada: "bg-red-50 text-red-600",
+};
+
+// Calcula el rango de un mes respetando la regla de negocio:
+// - Mes anterior/cerrado -> día 1 al último día del mes
+// - Mes actual -> día 1 al día de hoy (nunca fechas futuras)
+const getExportRangeForMonth = (yearMonthStr) => {
+  const [year, month] = yearMonthStr.split("-").map(Number);
+  const now = new Date();
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth() + 1;
+
+  const from = `${yearMonthStr}-01`;
+  const lastDayOfMonth = new Date(year, month, 0).getDate();
+  const toDay = isCurrentMonth ? now.getDate() : lastDayOfMonth;
+  const to = `${yearMonthStr}-${String(toDay).padStart(2, "0")}`;
+
+  return { from, to };
 };
 
 const getCurrentMonthRange = () => {
@@ -41,6 +59,11 @@ const IngresosPage = () => {
   const [dateFrom, setDateFrom] = useState(defaultRange.from);
   const [dateTo, setDateTo] = useState(defaultRange.to);
   const [search, setSearch] = useState("");
+
+  const [exportMonth, setExportMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
   const [summary, setSummary] = useState({
     totalIncome: 0,
@@ -159,7 +182,42 @@ const IngresosPage = () => {
       year: "numeric",
     });
 
-  const handleExportPdf = () => {};
+  const handleExportPdf = async () => {
+    const { from, to } = getExportRangeForMonth(exportMonth);
+
+    try {
+      showLoading("Generando reporte PDF...");
+
+      const response = await api.get("/sales/export-pdf", {
+        params: {
+          marca: marca || undefined,
+          dateFrom: from,
+          dateTo: to,
+          search: search || undefined,
+        },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `reporte-ingresos-${exportMonth}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      closeAlert();
+    } catch (err) {
+      closeAlert();
+      console.error(err);
+      showError(
+        "Error",
+        "No se pudo generar el reporte PDF. Intenta de nuevo.",
+      );
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
@@ -210,12 +268,22 @@ const IngresosPage = () => {
           />
         </div>
 
-        <button
-          onClick={handleExportPdf}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md shrink-0"
-        >
-          <LuDownload size={14} /> Exportar PDF
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <input
+            type="month"
+            value={exportMonth}
+            max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`}
+            onChange={(e) => setExportMonth(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
+            title="Mes a exportar"
+          />
+          <button
+            onClick={handleExportPdf}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+          >
+            <LuDownload size={14} /> Exportar PDF
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">

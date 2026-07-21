@@ -7,6 +7,7 @@ import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
 import Service from "../models/Service.js";
 import User from "../models/User.js";
+import PDFDocument from "pdfkit";
 
 const saleIncludes = [
   {
@@ -282,6 +283,193 @@ export const getSalesHistory = async (req, res) => {
       message: "Server error while fetching sales history",
       error: error.message,
     });
+  }
+};
+
+// Genera un reporte PDF de ventas respetando los mismos filtros del historial
+export const exportSalesPdf = async (req, res) => {
+  try {
+    const { marca, search } = req.query;
+    let { dateFrom, dateTo } = req.query;
+
+    // Blindaje: nunca permitir fechas futuras en el reporte
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    if (dateTo && dateTo > todayStr) {
+      dateTo = todayStr;
+    }
+    const where = {};
+
+    if (marca) where.marca = marca;
+
+    if (dateFrom || dateTo) {
+      where.created_at = {};
+      if (dateFrom) where.created_at[Op.gte] = new Date(`${dateFrom}T00:00:00`);
+      if (dateTo) where.created_at[Op.lte] = new Date(`${dateTo}T23:59:59`);
+    }
+
+    if (search) {
+      where[Op.or] = [
+        { folio: { [Op.like]: `%${search}%` } },
+        { "$customer.name$": { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const sales = await Sale.findAll({
+      where,
+      include: saleIncludes,
+      order: [["created_at", "ASC"]],
+      subQuery: false,
+    });
+
+    const totalIncome = sales.reduce(
+      (sum, s) => sum + parseFloat(s.amountPaid),
+      0,
+    );
+    const pendingBalance = sales.reduce(
+      (sum, s) => sum + (parseFloat(s.totalAmount) - parseFloat(s.amountPaid)),
+      0,
+    );
+
+    const formatCurrency = (v) =>
+      new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "MXN",
+      }).format(v || 0);
+
+    const formatDate = (v) =>
+      new Date(v).toLocaleDateString("es-MX", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
+    const doc = new PDFDocument({
+      margin: 40,
+      size: "A4",
+      layout: "landscape",
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="reporte-ingresos-${Date.now()}.pdf"`,
+    );
+
+    doc.pipe(res);
+
+    // Encabezado
+    doc
+      .fontSize(18)
+      .fillColor("#012438")
+      .text("Skinclinic — Reporte de Ingresos", { align: "left" });
+
+    doc
+      .fontSize(9)
+      .fillColor("#5b9fa6")
+      .text(
+        `Marca: ${marca || "Todas"}   |   Rango: ${dateFrom || "—"} a ${
+          dateTo || "—"
+        }   |   Generado: ${new Date().toLocaleString("es-MX")}`,
+      );
+
+    doc.moveDown(1.2);
+
+    // Tabla
+    const columns = [
+      { label: "Folio", width: 70 },
+      { label: "Fecha", width: 80 },
+      { label: "Cliente", width: 150 },
+      { label: "Tratamiento", width: 260 },
+      { label: "Monto", width: 90 },
+      { label: "Estado", width: 90 },
+    ];
+    const tableWidth = columns.reduce((sum, c) => sum + c.width, 0);
+    const left = doc.page.margins.left;
+
+    const drawHeaderRow = (y) => {
+      doc.rect(left, y, tableWidth, 20).fill("#197e88");
+      doc.fillColor("#ffffff").fontSize(9);
+      let x = left;
+      columns.forEach((col) => {
+        doc.text(col.label, x + 4, y + 6, { width: col.width - 8 });
+        x += col.width;
+      });
+      return y + 20;
+    };
+
+    let y = drawHeaderRow(doc.y);
+    doc.fontSize(8.5);
+
+    sales.forEach((sale, index) => {
+      if (y > doc.page.height - doc.page.margins.bottom - 30) {
+        doc.addPage({ layout: "landscape" });
+        y = drawHeaderRow(doc.page.margins.top);
+      }
+
+      if (index % 2 === 0) {
+        doc.rect(left, y, tableWidth, 18).fill("#f8fafc");
+      }
+      doc.fillColor("#012438");
+
+      const treatments =
+        sale.items
+          ?.map((i) => i.service?.name)
+          .filter(Boolean)
+          .join(", ") || "—";
+
+      const rowData = [
+        sale.folio,
+        formatDate(sale.createdAt || sale.created_at),
+        sale.customer?.name || "—",
+        treatments,
+        formatCurrency(sale.totalAmount),
+        sale.status,
+      ];
+
+      let x = left;
+      rowData.forEach((val, i) => {
+        doc.text(String(val), x + 4, y + 4, {
+          width: columns[i].width - 8,
+          ellipsis: true,
+        });
+        x += columns[i].width;
+      });
+
+      y += 18;
+    });
+
+    // Resumen final
+    y += 20;
+    if (y > doc.page.height - doc.page.margins.bottom - 60) {
+      doc.addPage({ layout: "landscape" });
+      y = doc.page.margins.top;
+    }
+
+    doc
+      .fontSize(11)
+      .fillColor("#012438")
+      .text(
+        `Total de ingresos cobrados: ${formatCurrency(totalIncome)}`,
+        left,
+        y,
+      );
+    doc.text(
+      `Saldos pendientes: ${formatCurrency(pendingBalance)}`,
+      left,
+      y + 16,
+    );
+    doc.text(`Ventas en el rango: ${sales.length}`, left, y + 32);
+
+    doc.end();
+  } catch (error) {
+    console.error("Error generando PDF de ventas:", error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        message: "Server error while generating PDF report",
+        error: error.message,
+      });
+    }
   }
 };
 

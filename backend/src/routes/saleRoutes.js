@@ -8,6 +8,7 @@ import {
   getMonthlySummary,
   getPendingAccounts,
   getCustomerPendingDebts,
+  exportSalesPdf,
 } from "../controllers/saleController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 import { writeLimiter } from "../middlewares/rateLimiter.js";
@@ -28,6 +29,7 @@ router.get(
   getPendingAccounts,
 );
 router.get("/customer-debts/:customerId", protect, getCustomerPendingDebts);
+router.get("/export-pdf", protect, restrictTo("Administrador"), exportSalesPdf);
 router.get("/", protect, restrictTo("Administrador"), getSalesHistory);
 router.get("/:id", protect, restrictTo("Administrador"), getSaleById);
 router.post(

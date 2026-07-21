@@ -10,6 +10,7 @@ import {
 const Navbar = ({
   pageTitle,
   userRole = "",
+  userId = "anon",
   pendingSales = [],
   assignedAppointments = [],
   onSelectAppointment,
@@ -18,8 +19,19 @@ const Navbar = ({
   const roleUpper = (userRole || "").toUpperCase();
   const isAdmin = roleUpper === "ADMINISTRADOR" || roleUpper === "ADMIN";
 
+  const storageKey = `depilclinik_read_notifs_${userId}_${isAdmin ? "sales" : "appointments"}`;
+
+  const loadReadIds = () => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+
   const [isOpen, setIsOpen] = useState(false);
-  const [readIds, setReadIds] = useState(new Set());
+  const [readIds, setReadIds] = useState(loadReadIds);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -32,11 +44,28 @@ const Navbar = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify([...readIds]));
+    } catch {
+      // sessionStorage puede fallar en modo incógnito; se ignora.
+    }
+  }, [readIds, storageKey]);
+
   const items = isAdmin ? pendingSales : assignedAppointments;
 
   const getItemId = (item) => {
     return item.appointmentId || item.id || item.saleId;
   };
+
+  useEffect(() => {
+    setReadIds((prev) => {
+      const currentIds = new Set(items.map(getItemId));
+      const pruned = new Set([...prev].filter((id) => currentIds.has(id)));
+      return pruned.size === prev.size ? prev : pruned;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   const unreadCount = items.filter(
     (item) => !readIds.has(getItemId(item)),

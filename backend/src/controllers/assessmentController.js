@@ -13,6 +13,7 @@ import BodyEvaluation from "../models/BodyEvaluation.js";
 import FacialEvaluation from "../models/FacialEvaluation.js";
 import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
+import { sanitizeEmptyStrings } from "../utils/sanitize.js";
 import { createPendingPhotosForAssessment } from "./assessmentPhotoController.js";
 
 const fullIncludes = [
@@ -113,6 +114,10 @@ export const createAssessment = async (req, res) => {
 
   try {
     const appointment = req.appointment;
+    // Saneamos TODO el body de entrada: cualquier "" se vuelve null antes
+    // de tocar la base de datos, para no romper columnas ENUM (periodType,
+    // bloodType, etc.) ni otros campos opcionales.
+    const sanitizedBody = sanitizeEmptyStrings(req.body);
     const {
       general,
       professionalTreatments,
@@ -126,7 +131,7 @@ export const createAssessment = async (req, res) => {
       allergiesRecord,
       bodyEvaluation,
       facialEvaluation,
-    } = req.body;
+    } = sanitizedBody;
 
     if (!general || !general.consultationReason || !general.referredMedia) {
       await t.rollback();
@@ -161,8 +166,15 @@ export const createAssessment = async (req, res) => {
     }
 
     if (gynecoRecord) {
+      const safeGynecoRecord = {
+        ...gynecoRecord,
+        periodType: gynecoRecord.periodType || null,
+      };
+
+      console.log("gynecoRecord saneado:", JSON.stringify(safeGynecoRecord));
+
       const createdGyneco = await GynecoObstetricRecord.create(
-        { ...gynecoRecord, assessmentId: assessment.assessmentId },
+        { ...safeGynecoRecord, assessmentId: assessment.assessmentId },
         { transaction: t },
       );
 
@@ -185,6 +197,11 @@ export const createAssessment = async (req, res) => {
     }
 
     if (lifestyleHabit) {
+      // day_description es TEXT NOT NULL en la BD; aunque el saneamiento
+      // global convierta "" en null para campos opcionales/ENUM, aquí
+      // debemos preservar "" como valor válido para no violar la restricción.
+      lifestyleHabit.dayDescription = lifestyleHabit.dayDescription ?? "";
+
       await LifestyleHabit.create(
         { ...lifestyleHabit, assessmentId: assessment.assessmentId },
         { transaction: t },

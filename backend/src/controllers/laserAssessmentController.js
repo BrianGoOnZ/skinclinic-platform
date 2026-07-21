@@ -4,6 +4,7 @@ import LaserAreaOfInterest from "../models/LaserAreaOfInterest.js";
 import LaserClinicalCondition from "../models/LaserClinicalCondition.js";
 import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
+import { sanitizeEmptyStrings } from "../utils/sanitize.js";
 import { createPendingPhotosForAssessment } from "./assessmentPhotoController.js";
 
 const fullIncludes = [
@@ -91,7 +92,8 @@ export const createLaserAssessment = async (req, res) => {
 
   try {
     const appointment = req.appointment;
-    const { general, areasOfInterest, clinicalConditions } = req.body;
+    const sanitizedBody = sanitizeEmptyStrings(req.body);
+    const { general, areasOfInterest, clinicalConditions } = sanitizedBody;
 
     if (!general || !general.referredMedia) {
       await t.rollback();

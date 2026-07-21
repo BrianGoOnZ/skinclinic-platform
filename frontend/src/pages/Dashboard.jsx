@@ -150,6 +150,7 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
         <Navbar
           pageTitle={PAGE_TITLES[activeView]}
           userRole={user?.role}
+          userId={user?.id}
           pendingSales={user?.role === "Administrador" ? pendingSales : []}
           assignedAppointments={
             user?.role !== "Administrador" ? assignedAppointments : []
