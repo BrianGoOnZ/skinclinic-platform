@@ -6,6 +6,8 @@ import {
   getSaleById,
   getTodayIncome,
   getMonthlySummary,
+  getPendingAccounts,
+  getCustomerPendingDebts,
 } from "../controllers/saleController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
 
@@ -18,6 +20,13 @@ router.get(
   restrictTo("Administrador"),
   getMonthlySummary,
 );
+router.get(
+  "/pending-accounts",
+  protect,
+  restrictTo("Administrador"),
+  getPendingAccounts,
+);
+router.get("/customer-debts/:customerId", protect, getCustomerPendingDebts);
 router.get("/", protect, restrictTo("Administrador"), getSalesHistory);
 router.get("/:id", protect, restrictTo("Administrador"), getSaleById);
 router.post("/", protect, restrictTo("Administrador"), createSale);

@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import api from "../services/api";
-import { LuSearch, LuEye, LuFilter, LuDownload } from "react-icons/lu";
+import {
+  LuSearch,
+  LuEye,
+  LuFilter,
+  LuDownload,
+  LuWallet,
+} from "react-icons/lu";
 import SaleDetailModal from "../components/SaleDetailModal";
 
 const STATUS_COLORS = {
@@ -23,10 +29,13 @@ const IngresosPage = () => {
   const defaultRange = getCurrentMonthRange();
 
   const [sales, setSales] = useState([]);
+  const [pendingSales, setPendingSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [activeTab, setActiveTab] = useState("historial");
 
   const [marca, setMarca] = useState("");
   const [dateFrom, setDateFrom] = useState(defaultRange.from);
@@ -67,6 +76,25 @@ const IngresosPage = () => {
     }
   }, [marca, dateFrom, dateTo, search, page]);
 
+  const fetchPendingAccounts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/sales/pending-accounts", {
+        params: {
+          marca: marca || undefined,
+          search: search || undefined,
+        },
+      });
+      setPendingSales(response.data);
+      setError("");
+    } catch (err) {
+      setError("No se pudieron cargar las cuentas por cobrar.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [marca, search]);
+
   const fetchSummary = useCallback(async () => {
     try {
       const [year, month] = dateFrom.split("-");
@@ -80,8 +108,12 @@ const IngresosPage = () => {
   }, [dateFrom, marca]);
 
   useEffect(() => {
-    fetchSales();
-  }, [fetchSales]);
+    if (activeTab === "historial") {
+      fetchSales();
+    } else {
+      fetchPendingAccounts();
+    }
+  }, [activeTab, fetchSales, fetchPendingAccounts]);
 
   useEffect(() => {
     fetchSummary();
@@ -93,10 +125,14 @@ const IngresosPage = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchSales();
+      if (activeTab === "historial") {
+        fetchSales();
+      } else {
+        fetchPendingAccounts();
+      }
     }, 350);
     return () => clearTimeout(timeoutId);
-  }, [search]);
+  }, [search, activeTab, fetchSales, fetchPendingAccounts]);
 
   const handleOpenDetail = async (saleId) => {
     try {
@@ -142,19 +178,23 @@ const IngresosPage = () => {
           <option value="Depilclinik">Depilclinik</option>
         </select>
 
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
-        />
-        <span className="text-xs text-accent">a</span>
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
-        />
+        {activeTab === "historial" && (
+          <>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
+            />
+            <span className="text-xs text-accent">a</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-borderClinik text-xs font-semibold focus:outline-none focus:border-secondary"
+            />
+          </>
+        )}
 
         <div className="relative flex-1 min-w-50">
           <LuSearch
@@ -208,6 +248,29 @@ const IngresosPage = () => {
         </div>
       </div>
 
+      <div className="flex gap-2 border-b border-gray-200 pb-1">
+        <button
+          onClick={() => setActiveTab("historial")}
+          className={`px-4 py-2 font-bold text-xs rounded-xl transition-all cursor-pointer ${
+            activeTab === "historial"
+              ? "bg-secondary text-white shadow-sm"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          Historial General
+        </button>
+        <button
+          onClick={() => setActiveTab("cuentasPorCobrar")}
+          className={`px-4 py-2 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+            activeTab === "cuentasPorCobrar"
+              ? "bg-amber-600 text-white shadow-sm"
+              : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+          }`}
+        >
+          <LuWallet size={15} /> Cuentas por Cobrar
+        </button>
+      </div>
+
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
           <p className="text-secondary text-center font-medium p-8 text-sm">
@@ -217,6 +280,86 @@ const IngresosPage = () => {
           <p className="text-red-600 text-center font-medium p-8 text-sm">
             {error}
           </p>
+        ) : activeTab === "cuentasPorCobrar" ? (
+          pendingSales.length === 0 ? (
+            <p className="text-accent text-center font-medium p-8 text-sm">
+              ¡Excelente! No hay clientes con saldos pendientes por cobrar.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-175">
+                <thead>
+                  <tr className="border-b border-amber-100 bg-amber-50/50">
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Folio
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Fecha
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Cliente
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Total Venta
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Abonado
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900">
+                      Saldo Pendiente
+                    </th>
+                    <th className="p-4 text-xs font-bold text-amber-900 text-right">
+                      Acción
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-100/60">
+                  {pendingSales.map((sale) => {
+                    const balance =
+                      parseFloat(sale.totalAmount) -
+                      parseFloat(sale.amountPaid);
+                    return (
+                      <tr
+                        key={sale.saleId}
+                        className="hover:bg-amber-50/40 transition-colors"
+                      >
+                        <td className="p-4 text-sm font-semibold text-primary">
+                          {sale.folio}
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">
+                          {formatDate(sale.createdAt || sale.created_at)}
+                        </td>
+                        <td className="p-4 text-sm text-primary font-medium">
+                          {sale.customer?.name || "—"}
+                          <p className="text-xs text-accent">
+                            {sale.customer?.phone}
+                          </p>
+                        </td>
+                        <td className="p-4 text-sm font-bold text-primary">
+                          {formatCurrency(sale.totalAmount)}
+                        </td>
+                        <td className="p-4 text-sm font-bold text-emerald-600">
+                          {formatCurrency(sale.amountPaid)}
+                        </td>
+                        <td className="p-4 text-sm font-bold text-red-600">
+                          {formatCurrency(balance)}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleOpenDetail(sale.saleId)}
+                            disabled={detailLoading}
+                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                          >
+                            Abonar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
         ) : sales.length === 0 ? (
           <p className="text-accent text-center font-medium p-8 text-sm">
             No se encontraron transacciones en este rango.
@@ -289,7 +432,7 @@ const IngresosPage = () => {
           </div>
         )}
 
-        {totalPages > 1 && (
+        {activeTab === "historial" && totalPages > 1 && (
           <div className="flex items-center justify-between p-4 border-t border-gray-100">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -316,6 +459,15 @@ const IngresosPage = () => {
         isOpen={Boolean(selectedSale)}
         sale={selectedSale}
         onClose={() => setSelectedSale(null)}
+        onPaymentSuccess={async (saleId) => {
+          await handleOpenDetail(saleId);
+          if (activeTab === "cuentasPorCobrar") {
+            fetchPendingAccounts();
+          } else {
+            fetchSales();
+          }
+          fetchSummary();
+        }}
       />
     </div>
   );

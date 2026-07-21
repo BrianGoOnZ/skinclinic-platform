@@ -155,7 +155,7 @@ export const createSale = async (req, res) => {
       error: error.message,
     });
   }
-}; // 👈 Corregida la llave de cierre que faltaba
+};
 
 // Registra un abono adicional a una venta con adeudo
 export const registerPayment = async (req, res) => {
@@ -365,6 +365,51 @@ export const getMonthlySummary = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Server error while fetching monthly summary",
+      error: error.message,
+    });
+  }
+};
+
+// 1. Obtener todas las ventas con adeudo pendiente (Para el módulo Cuentas por Cobrar)
+export const getPendingAccounts = async (req, res) => {
+  try {
+    const { search, marca } = req.query;
+    const where = { status: "Con adeudo" };
+
+    if (marca) where.marca = marca;
+
+    const pendingSales = await Sale.findAll({
+      where,
+      include: saleIncludes, // Incluye Customer, User, Items, Payments
+      order: [["created_at", "ASC"]], // Las deudas más antiguas primero
+    });
+
+    res.status(200).json(pendingSales);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al obtener las cuentas por cobrar",
+      error: error.message,
+    });
+  }
+};
+
+// 2. Obtener los adeudos de un cliente específico (Para la ficha del cliente)
+export const getCustomerPendingDebts = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const debts = await Sale.findAll({
+      where: {
+        customerId,
+        status: "Con adeudo",
+      },
+      include: saleIncludes,
+    });
+
+    res.status(200).json(debts);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al consultar adeudos del cliente",
       error: error.message,
     });
   }

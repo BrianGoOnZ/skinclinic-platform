@@ -1,5 +1,13 @@
-import React from "react";
-import { LuX, LuReceipt, LuUser, LuCreditCard } from "react-icons/lu";
+import React, { useState } from "react";
+import {
+  LuX,
+  LuReceipt,
+  LuUser,
+  LuCreditCard,
+  LuPlus,
+  LuCheck,
+} from "react-icons/lu";
+import api from "../services/api";
 
 const STATUS_COLORS = {
   Liquidada: {
@@ -19,8 +27,14 @@ const STATUS_COLORS = {
   },
 };
 
-const SaleDetailModal = ({ isOpen, sale, onClose }) => {
+const SaleDetailModal = ({ isOpen, sale, onClose, onPaymentSuccess }) => {
   if (!isOpen || !sale) return null;
+
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Efectivo");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("es-MX", {
@@ -39,6 +53,45 @@ const SaleDetailModal = ({ isOpen, sale, onClose }) => {
 
   const statusMeta = STATUS_COLORS[sale.status] || STATUS_COLORS["Con adeudo"];
   const balance = parseFloat(sale.totalAmount) - parseFloat(sale.amountPaid);
+
+  const handleRegisterPayment = async (e) => {
+    e.preventDefault();
+    const paymentAmount = parseFloat(amount);
+
+    if (!paymentAmount || paymentAmount <= 0) {
+      setError("Ingresa un monto válido.");
+      return;
+    }
+
+    if (paymentAmount > balance) {
+      setError(
+        `El abono no puede superar el saldo pendiente (${formatCurrency(balance)}).`,
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      await api.post(`/sales/${sale.saleId}/payments`, {
+        amount: paymentAmount,
+        paymentMethod,
+      });
+
+      setAmount("");
+      setShowAddPayment(false);
+
+      if (onPaymentSuccess) {
+        onPaymentSuccess(sale.saleId);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Error al registrar el abono.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -130,9 +183,85 @@ const SaleDetailModal = ({ isOpen, sale, onClose }) => {
           </div>
 
           <div>
-            <p className="text-xs font-bold text-primary uppercase mb-2 flex items-center gap-1.5">
-              <LuCreditCard size={14} /> Abonos registrados
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold text-primary uppercase flex items-center gap-1.5">
+                <LuCreditCard size={14} /> Abonos registrados
+              </p>
+              {balance > 0 && !showAddPayment && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddPayment(true)}
+                  className="flex items-center gap-1 text-xs font-bold text-secondary hover:underline cursor-pointer"
+                >
+                  <LuPlus size={14} /> Registrar Abono
+                </button>
+              )}
+            </div>
+
+            {showAddPayment && (
+              <form
+                onSubmit={handleRegisterPayment}
+                className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-100 mb-3 flex flex-col gap-2 text-xs"
+              >
+                <div className="flex items-center justify-between font-bold text-emerald-800">
+                  <span>Nuevo Abono</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddPayment(false);
+                      setError("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <LuX size={14} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                      Monto
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder={`Max: ${balance}`}
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-secondary font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 mb-1">
+                      Método
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-secondary font-semibold"
+                    >
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Tarjeta">Tarjeta</option>
+                      <option value="Transferencia">Transferencia</option>
+                    </select>
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-[11px] text-red-600 font-bold">{error}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-1 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
+                >
+                  <LuCheck size={14} />{" "}
+                  {loading ? "Guardando..." : "Confirmar Abono"}
+                </button>
+              </form>
+            )}
+
             {sale.payments?.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {sale.payments.map((p) => (
