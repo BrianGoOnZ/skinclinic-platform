@@ -1,5 +1,6 @@
 import Service from "../models/Service.js";
 import ServiceInclusion from "../models/ServiceInclusion.js";
+import { invalidateCache } from "../middlewares/cache.js";
 
 const inclusionInclude = {
   model: ServiceInclusion,
@@ -101,6 +102,7 @@ export const createService = async (req, res) => {
     }
 
     await t.commit();
+    await invalidateCache("services");
 
     const fullService = await Service.findByPk(newService.serviceId, {
       include: [inclusionInclude],
@@ -154,6 +156,7 @@ export const updateService = async (req, res) => {
     }
 
     await t.commit();
+    await invalidateCache("services");
 
     const fullService = await Service.findByPk(id, {
       include: [inclusionInclude],
@@ -179,6 +182,7 @@ export const deactivateService = async (req, res) => {
     }
 
     await service.update({ isActive: false });
+    await invalidateCache("services");
 
     res.status(200).json({ message: "Servicio desactivado correctamente" });
   } catch (error) {
@@ -199,6 +203,7 @@ export const reactivateService = async (req, res) => {
     }
 
     await service.update({ isActive: true });
+    await invalidateCache("services");
 
     res.status(200).json(service);
   } catch (error) {

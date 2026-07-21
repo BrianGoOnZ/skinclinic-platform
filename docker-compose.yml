@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: skinclinic-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - skinclinic-network
+
   db:
     image: mysql:8.0
     container_name: skinclinic-db
@@ -36,9 +45,13 @@ services:
       - DB_PASSWORD=mode321
       - DB_NAME=clinic_management_db
       - TZ=America/Monterrey
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     restart: unless-stopped
     networks:
       - skinclinic-network

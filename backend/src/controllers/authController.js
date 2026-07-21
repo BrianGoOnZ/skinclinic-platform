@@ -69,7 +69,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ where: { email } });
-    if (!user || user.is_active === false) {
+    if (!user || user.isActive === false) {
       return res
         .status(401)
         .json({ message: "Credenciales inválidas o cuenta inactiva" });

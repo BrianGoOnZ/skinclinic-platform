@@ -59,15 +59,6 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
     }
   }, [user, fetchPendingAccounts, fetchAssignedAppointments]);
 
-  const handleSelectSaleFromBell = async (saleId) => {
-    try {
-      const response = await api.get(`/sales/${saleId}`);
-      setSelectedSale(response.data);
-    } catch (err) {
-      console.error("Error al abrir detalle de venta desde la campana:", err);
-    }
-  };
-
   const handleSelectAppointmentFromBell = () => {
     setActiveView("agenda");
   };
@@ -163,16 +154,7 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
           assignedAppointments={
             user?.role !== "Administrador" ? assignedAppointments : []
           }
-          onSelectSale={
-            user?.role === "Administrador"
-              ? handleSelectSaleFromBell
-              : undefined
-          }
-          onSelectAppointment={
-            user?.role !== "Administrador"
-              ? handleSelectAppointmentFromBell
-              : undefined
-          }
+          onSelectAppointment={handleSelectAppointmentFromBell}
         />
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {renderContent()}

@@ -4,6 +4,9 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import sequelize from "./src/config/db.js";
+import { globalLimiter } from "./src/middlewares/rateLimiter.js";
+import swaggerSpec from "./src/config/swagger.js";
+import swaggerUi from "swagger-ui-express";
 
 // Modelos necesarios
 import SaleItem from "./src/models/SaleItem.js";
@@ -28,13 +31,18 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   }),
 );
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(globalLimiter);
+
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 // Única asociación faltante para conectar SaleItem con Service
 SaleItem.belongsTo(Service, { foreignKey: "serviceId", as: "service" });

@@ -79,16 +79,13 @@ const Sidebar = ({
       onMouseLeave={() => setIsCollapsed(true)}
       className={`${isCollapsed ? "w-20" : "w-64"} h-screen bg-white border-r border-gray-100 flex flex-col shrink-0 sticky top-0 transition-all duration-300 relative`}
     >
-      {/* Bloque superior del perfil: Altura fija al contraer y expansión fluida al abrir */}
       <div
         className={`w-full px-4 flex flex-col items-center justify-center text-center border-b border-gray-300 bg-linear-to-l from-[#cbe4e6] via-[#e2eff1] to-[#f7d2e3] transition-all duration-300 shrink-0 ${isCollapsed ? "h-20 gap-0" : "py-5 gap-2"}`}
       >
-        {/* El círculo de las iniciales fijo en el centro superior */}
         <div className="w-11 h-11 shrink-0 rounded-full bg-linear-to-br from-secondary to-depil flex items-center justify-center text-white font-black text-sm shadow-md transition-transform duration-300">
           {getInitials(userName)}
         </div>
 
-        {/* El nombre y el rol se despliegan abajo con una transición limpia */}
         {!isCollapsed && (
           <div className="overflow-hidden animate-[fadeIn_0.2s_ease-out] w-full mt-1">
             <p className="text-sm font-bold text-primary truncate max-w-50 mx-auto">
@@ -101,7 +98,6 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* Navegación del menú */}
       <nav
         className={`flex-1 ${isCollapsed ? "px-2" : "px-4"} py-4 flex flex-col gap-1 overflow-y-auto transition-all`}
       >
@@ -115,6 +111,7 @@ const Sidebar = ({
           return (
             <div key={item.id} className="w-full flex flex-col">
               <div
+                data-cy={`nav-${item.id}`}
                 onClick={() => {
                   setActiveView(item.id);
                   if (item.hasChildren) {
@@ -150,7 +147,6 @@ const Sidebar = ({
                 )}
               </div>
 
-              {/* Submenú desplegable: Solo se muestra si está abierto y no colapsado */}
               {!isCollapsed && item.hasChildren && isClientesOpen && (
                 <div className="flex flex-col gap-1 mt-1 pl-6 animate-[fadeIn_0.2s_ease-out]">
                   {item.children?.map((child) => {
@@ -179,11 +175,11 @@ const Sidebar = ({
         })}
       </nav>
 
-      {/* Botón de Cerrar Sesión inferior */}
       <div
         className={`${isCollapsed ? "p-2 text-center" : "p-4"} border-t border-gray-50 transition-all shrink-0`}
       >
         <div
+          data-cy="nav-logout"
           onClick={onLogout}
           className={`flex items-center ${isCollapsed ? "justify-center px-0 w-12 h-12 mx-auto" : "gap-4 px-4 py-3.5 w-full"} rounded-xl text-sm font-bold transition-all cursor-pointer text-left text-gray-500 hover:bg-red-50 hover:text-red-600`}
         >

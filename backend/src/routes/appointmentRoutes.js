@@ -8,13 +8,26 @@ import {
   getPendingCheckouts,
 } from "../controllers/appointmentController.js";
 import { protect, restrictTo } from "../middlewares/auth.js";
+import { writeLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 router.get("/", protect, getAllAppointments);
 router.get("/check-conflict", protect, checkAppointmentConflict);
-router.post("/", protect, restrictTo("Administrador"), createAppointment);
-router.put("/:id", protect, restrictTo("Administrador"), updateAppointment);
+router.post(
+  "/",
+  protect,
+  restrictTo("Administrador"),
+  writeLimiter,
+  createAppointment,
+);
+router.put(
+  "/:id",
+  protect,
+  restrictTo("Administrador"),
+  writeLimiter,
+  updateAppointment,
+);
 router.patch(
   "/:id/status",
   protect,

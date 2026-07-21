@@ -20,6 +20,7 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 ## Stack Tecnológico
 
 **Frontend**
+
 - React 19 + Vite
 - Tailwind CSS 4
 - React Icons (`react-icons/lu` - Lucide)
@@ -27,6 +28,7 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 - React Big Calendar (módulo de Agenda)
 
 **Backend**
+
 - Node.js + Express 5
 - Sequelize ORM
 - MySQL 8.0
@@ -36,6 +38,7 @@ Plataforma web de administración interna para una clínica de belleza, cosmetol
 - CORS configurado para el frontend en desarrollo
 
 **Infraestructura**
+
 - Docker & Docker Compose (servicios `db`, `backend`, `frontend`)
 - Nodemon para hot-reload en desarrollo
 
@@ -101,11 +104,11 @@ docker compose up --build
 
 Esto levantará:
 
-| Servicio  | Puerto  | Descripción                          |
-|-----------|---------|---------------------------------------|
-| `db`      | 3306    | MySQL 8.0                             |
-| `backend` | 5000    | API REST con Express                  |
-| `frontend`| 5173    | Aplicación React servida con Vite     |
+| Servicio   | Puerto | Descripción                       |
+| ---------- | ------ | --------------------------------- |
+| `db`       | 3306   | MySQL 8.0                         |
+| `backend`  | 5000   | API REST con Express              |
+| `frontend` | 5173   | Aplicación React servida con Vite |
 
 La base de datos se inicializa automáticamente con el archivo `init.sql` montado en `/docker-entrypoint-initdb.d/`.
 
@@ -123,7 +126,7 @@ npm install
 npm run dev
 ```
 
->  Si corres el backend fuera de Docker, deberás tener una instancia de MySQL corriendo localmente y ajustar las variables de entorno correspondientes.
+> Si corres el backend fuera de Docker, deberás tener una instancia de MySQL corriendo localmente y ajustar las variables de entorno correspondientes.
 
 ### Crear el administrador inicial
 
@@ -151,6 +154,9 @@ NODE_ENV=development
 # JWT
 JWT_ACCESS_SECRET=tu_secreto_access_token
 JWT_REFRESH_SECRET=tu_secreto_refresh_token
+
+# CORS
+FRONTEND_URL=http://localhost:5173
 ```
 
 En `frontend/`, si necesitas apuntar a una API distinta al proxy por defecto:
@@ -172,10 +178,10 @@ VITE_API_URL=http://localhost:5000/api
 
 El sistema maneja dos roles:
 
-| Rol             | Permisos                                                                 |
-|-----------------|---------------------------------------------------------------------------|
-| `Administrador` | Acceso total: gestión de colaboradores, clientes, servicios, citas e ingresos |
-| `Colaborador`    | Acceso de solo lectura/operación limitada a su propia agenda y consulta de directorio |
+| Rol             | Permisos                                                                              |
+| --------------- | ------------------------------------------------------------------------------------- |
+| `Administrador` | Acceso total: gestión de colaboradores, clientes, servicios, citas e ingresos         |
+| `Colaborador`   | Acceso de solo lectura/operación limitada a su propia agenda y consulta de directorio |
 
 La autorización se valida en el backend mediante el middleware `restrictTo(...roles)`.
 

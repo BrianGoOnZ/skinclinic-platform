@@ -10,13 +10,34 @@ import {
   getMyPendingAssessments,
 } from "../controllers/dashboardController.js";
 import { protect } from "../middlewares/auth.js";
+import { cacheMiddleware } from "../middlewares/cache.js";
 
 const router = express.Router();
 
-router.get("/today-summary", protect, getTodaySummary);
-router.get("/top-treatments", protect, getTopTreatments);
-router.get("/collaborator-performance", protect, getCollaboratorPerformance);
-router.get("/upcoming-appointments", protect, getUpcomingAppointments);
+router.get(
+  "/today-summary",
+  protect,
+  cacheMiddleware("dashboard", 20),
+  getTodaySummary,
+);
+router.get(
+  "/top-treatments",
+  protect,
+  cacheMiddleware("dashboard", 30),
+  getTopTreatments,
+);
+router.get(
+  "/collaborator-performance",
+  protect,
+  cacheMiddleware("dashboard", 30),
+  getCollaboratorPerformance,
+);
+router.get(
+  "/upcoming-appointments",
+  protect,
+  cacheMiddleware("dashboard", 15),
+  getUpcomingAppointments,
+);
 
 router.get("/my-today-appointments", protect, getMyTodayAppointments);
 router.get("/my-monthly-count", protect, getMyMonthlyCount);

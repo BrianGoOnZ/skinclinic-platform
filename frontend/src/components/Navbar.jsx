@@ -12,7 +12,6 @@ const Navbar = ({
   userRole = "",
   pendingSales = [],
   assignedAppointments = [],
-  onSelectSale,
   onSelectAppointment,
 }) => {
   const isDashboard = !pageTitle;
@@ -47,10 +46,7 @@ const Navbar = ({
     const id = getItemId(item);
     setReadIds((prev) => new Set(prev).add(id));
     setIsOpen(false);
-
-    if (onSelectAppointment) {
-      onSelectAppointment(item);
-    }
+    onSelectAppointment?.(item);
   };
 
   const handleMarkAllAsRead = () => {
