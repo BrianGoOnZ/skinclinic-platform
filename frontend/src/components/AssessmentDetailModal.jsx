@@ -1,11 +1,15 @@
 import React from "react";
-import { LuX } from "react-icons/lu";
+import { LuX, LuHistory } from "react-icons/lu";
 import AssessmentSummaryView from "./clinicalRecord/AssessmentSummaryView";
 
-const AssessmentDetailModal = ({ isOpen, assessment, onClose }) => {
+const AssessmentDetailModal = ({
+  isOpen,
+  assessment,
+  onClose,
+  onViewFullHistory,
+}) => {
   if (!isOpen) return null;
 
-  // 🔹 Evita que el modal truene si createdAt/created_at es undefined o fecha inválida
   const formatDate = (dateValue) => {
     if (!dateValue) return "";
     const parsed = new Date(dateValue);
@@ -31,12 +35,25 @@ const AssessmentDetailModal = ({ isOpen, assessment, onClose }) => {
               {formatDate(assessment?.createdAt || assessment?.created_at)}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-accent hover:text-primary text-sm font-bold cursor-pointer"
-          >
-            <LuX size={20} />
-          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {onViewFullHistory && assessment?.customer && (
+              <button
+                onClick={() => onViewFullHistory(assessment.customer)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-secondary/10 text-secondary text-xs font-bold hover:bg-secondary/20 transition-colors cursor-pointer"
+                title="Ver todas las sesiones de este cliente"
+              >
+                <LuHistory size={14} />
+                Historial completo
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-accent hover:text-primary text-sm font-bold cursor-pointer p-1"
+            >
+              <LuX size={20} />
+            </button>
+          </div>
         </div>
         <div className="p-6 overflow-y-auto flex-1">
           {assessment ? (

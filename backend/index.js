@@ -23,6 +23,10 @@ import assessmentPhotoRoutes from "./src/routes/assessmentPhotoRoutes.js";
 import saleRoutes from "./src/routes/saleRoutes.js";
 import dashboardRoutes from "./src/routes/dashboardRoutes.js";
 
+import whatsappRoutes from "./src/routes/whatsappRoutes.js";
+import "./src/workers/whatsappWorker.js"; // arranca el worker al importar
+import { startWhatsappScheduler } from "./src/jobs/scheduleWhatsappReminders.js";
+
 dotenv.config();
 
 const app = express();
@@ -58,6 +62,8 @@ app.use("/api/laser-assessments", laserAssessmentRoutes);
 app.use("/api/assessment-photos", assessmentPhotoRoutes);
 app.use("/api/sales", saleRoutes);
 
+app.use("/api/whatsapp", whatsappRoutes);
+
 const PORT = process.env.PORT || 5000;
 
 async function connectWithRetry(retries = 10, delay = 5000) {
@@ -91,6 +97,7 @@ async function startServer() {
     console.log(
       "Conexión con MySQL verificada. El esquema se gestiona manualmente vía init.sql.",
     );
+    startWhatsappScheduler();
   } catch (error) {
     console.error(
       "Error al verificar la conexión con la base de datos:",

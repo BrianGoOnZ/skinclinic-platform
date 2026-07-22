@@ -11,6 +11,7 @@ import AssessmentHistoryPage from "./AssessmentHistoryPage";
 import IngresosPage from "./IngresosPage";
 import DashboardHome from "./DashboardPage";
 import CollaboratorDashboard from "./CollaboratorDashboard";
+import WhatsAppPage from "./WhatsAppPage";
 
 const PAGE_TITLES = {
   empleados: "Gestión de Colaboradores",
@@ -19,6 +20,7 @@ const PAGE_TITLES = {
   agenda: "Agenda",
   servicios: "Catálogo de Servicios",
   ingresos: "Ingresos",
+  confirmaciones: "Confirmaciones de Citas",
 };
 
 const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
@@ -126,6 +128,16 @@ const DashboardPage = ({ user, onLogout, onAttendAppointment }) => {
           );
         }
         return <IngresosPage />;
+
+      case "confirmaciones":
+        if (user?.role !== "Administrador") {
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400 text-sm">
+              No tienes permisos para acceder a esta sección.
+            </div>
+          );
+        }
+        return <WhatsAppPage />;
 
       default:
         return (

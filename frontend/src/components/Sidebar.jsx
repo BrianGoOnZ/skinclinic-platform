@@ -10,7 +10,9 @@ import {
   LuLogOut,
   LuChevronDown,
   LuChevronRight,
+  LuMessageCircle,
 } from "react-icons/lu";
+import WhatsAppPage from "../pages/WhatsAppPage";
 
 const getInitials = (name) => {
   if (!name) return "U";
@@ -65,6 +67,12 @@ const Sidebar = ({
       id: "ingresos",
       label: "Ingresos",
       icon: <LuCreditCard size={20} />,
+      adminOnly: true,
+    },
+    {
+      id: "confirmaciones",
+      label: "Confirmaciones",
+      icon: <LuMessageCircle size={20} />,
       adminOnly: true,
     },
   ];

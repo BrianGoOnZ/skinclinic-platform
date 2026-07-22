@@ -6,6 +6,7 @@ import User from "./User.js";
 import MedicalAssessment from "./MedicalAssessment.js";
 import LaserMedicalAssessment from "./LaserMedicalAssessment.js";
 import Sale from "./Sale.js";
+import WhatsappNotification from "./WhatsappNotification.js";
 
 const Appointment = sequelize.define(
   "Appointment",
@@ -98,6 +99,15 @@ Appointment.hasOne(Sale, {
   as: "sale",
 });
 Sale.belongsTo(Appointment, {
+  foreignKey: "appointmentId",
+  as: "appointment",
+});
+
+Appointment.hasOne(WhatsappNotification, {
+  foreignKey: "appointmentId",
+  as: "whatsappNotification",
+});
+WhatsappNotification.belongsTo(Appointment, {
   foreignKey: "appointmentId",
   as: "appointment",
 });

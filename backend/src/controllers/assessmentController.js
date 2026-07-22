@@ -15,6 +15,7 @@ import Appointment from "../models/Appointment.js";
 import Customer from "../models/Customer.js";
 import { sanitizeEmptyStrings } from "../utils/sanitize.js";
 import { createPendingPhotosForAssessment } from "./assessmentPhotoController.js";
+import Service from "../models/Service.js";
 
 const fullIncludes = [
   { model: AssessmentProfessionalTreatment, as: "professionalTreatments" },
@@ -31,6 +32,19 @@ const fullIncludes = [
   { model: PatientAllergiesRecord, as: "allergiesRecord" },
   { model: BodyEvaluation, as: "bodyEvaluation" },
   { model: FacialEvaluation, as: "facialEvaluation" },
+  {
+    model: Appointment,
+    as: "appointment",
+    attributes: ["appointmentId", "startTime", "status"],
+    required: false,
+    include: [
+      {
+        model: Service,
+        as: "service",
+        attributes: ["serviceId", "name", "brand"],
+      },
+    ],
+  },
 ];
 
 // Obtiene el expediente más reciente de un cliente (para CustomersPage)

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { LuSearch, LuFileText } from "react-icons/lu";
-import LatestAssessmentPage from "./LatestAssessmentPage";
+import AssessmentDetailModal from "../components/AssessmentDetailModal";
+import CustomerAssessmentHistoryPage from "./CustomerAssessmentHistoryPage";
 
 const AssessmentHistoryPage = () => {
   const [modelhaRecords, setModelhaRecords] = useState([]);
@@ -10,8 +11,9 @@ const AssessmentHistoryPage = () => {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [viewingCustomerForAssessment, setViewingCustomerForAssessment] =
-    useState(null);
+  const [viewingAssessment, setViewingAssessment] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [viewingCustomerHistory, setViewingCustomerHistory] = useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -35,18 +37,37 @@ const AssessmentHistoryPage = () => {
     fetchAll();
   }, []);
 
-  const handleOpenAssessmentPage = (record) => {
-    const customerObj = record.customer || {
-      customerId: record.customerId,
-      name: record.customerName,
-      phone: record.customerPhone,
-    };
-    setViewingCustomerForAssessment(customerObj);
+  // Trae el expediente EXACTO que se clickeó (no "el último"), usando su id
+  // real y la marca a la que pertenece para pegarle al endpoint correcto.
+  const handleOpenAssessmentDetail = async (record) => {
+    setLoadingDetail(true);
+    try {
+      const endpoint =
+        record.brand === "Modelha DK"
+          ? `/assessments/${record.rawId}`
+          : `/laser-assessments/${record.rawId}`;
+
+      const response = await api.get(endpoint);
+      setViewingAssessment(response.data);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cargar el expediente seleccionado.");
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  // Salta del modal de un expediente puntual al timeline completo del
+  // cliente, sin que el admin tenga que salir y buscarlo de nuevo.
+  const handleViewFullHistory = (customer) => {
+    setViewingAssessment(null);
+    setViewingCustomerHistory(customer);
   };
 
   const combined = [
     ...modelhaRecords.map((r) => ({
       id: `modelha-${r.assessmentId}`,
+      rawId: r.assessmentId,
       customerId: r.customerId || r.customer?.customerId,
       customerName: r.customer?.name || "—",
       customerPhone: r.customer?.phone || "",
@@ -57,6 +78,7 @@ const AssessmentHistoryPage = () => {
     })),
     ...laserRecords.map((r) => ({
       id: `laser-${r.laserAssessmentId}`,
+      rawId: r.laserAssessmentId,
       customerId: r.customerId || r.customer?.customerId,
       customerName: r.customer?.name || "—",
       customerPhone: r.customer?.phone || "",
@@ -76,11 +98,11 @@ const AssessmentHistoryPage = () => {
     Depilclinik: "bg-depil-soft text-depil",
   };
 
-  if (viewingCustomerForAssessment) {
+  if (viewingCustomerHistory) {
     return (
-      <LatestAssessmentPage
-        customer={viewingCustomerForAssessment}
-        onBack={() => setViewingCustomerForAssessment(null)}
+      <CustomerAssessmentHistoryPage
+        customer={viewingCustomerHistory}
+        onBack={() => setViewingCustomerHistory(null)}
       />
     );
   }
@@ -170,8 +192,9 @@ const AssessmentHistoryPage = () => {
                     </td>
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleOpenAssessmentPage(record)}
-                        className="p-1.5 text-accent hover:text-depil transition-colors cursor-pointer"
+                        onClick={() => handleOpenAssessmentDetail(record)}
+                        disabled={loadingDetail}
+                        className="p-1.5 text-accent hover:text-depil transition-colors cursor-pointer disabled:opacity-40"
                         title="Ver Expediente"
                       >
                         <LuFileText size={16} />
@@ -184,6 +207,13 @@ const AssessmentHistoryPage = () => {
           </div>
         )}
       </div>
+
+      <AssessmentDetailModal
+        isOpen={Boolean(viewingAssessment)}
+        assessment={viewingAssessment}
+        onClose={() => setViewingAssessment(null)}
+        onViewFullHistory={handleViewFullHistory}
+      />
     </div>
   );
 };
