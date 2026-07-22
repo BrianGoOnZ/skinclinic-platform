@@ -128,25 +128,25 @@ const DashboardPage = ({ userRole, onPendingSalesUpdate }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           icon={LuBanknote}
-          label="Ingresos de hoy"
+          label="Ingresos"
           value={formatCurrency(todayIncome)}
           color="#16a34a"
         />
         <StatCard
           icon={LuUsers}
-          label="Clientes atendidos hoy"
+          label="Clientes atendidos"
           value={todaySummary.clientsAttendedToday}
           color="#197e88"
         />
         <StatCard
           icon={LuUserPlus}
-          label="Clientes nuevos hoy"
+          label="Clientes nuevos"
           value={todaySummary.newClientsToday}
           color="#c0247d"
         />
         <StatCard
           icon={LuCalendarCheck}
-          label="Citas totales hoy"
+          label="Citas totales"
           value={todaySummary.totalAppointmentsToday}
           color="#c99a4a"
         />

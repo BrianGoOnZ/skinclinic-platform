@@ -9,7 +9,6 @@ import {
 } from "../utils/alerts";
 import ModelhaAssessmentForm from "../components/clinicalRecord/ModelhaAssessmentForm";
 import LaserAssessmentForm from "../components/clinicalRecord/LaserAssessmentForm";
-import AssessmentPhotosSection from "../components/clinicalRecord/AssessmentPhotosSection";
 
 const ClinicalRecordPage = ({ appointmentId, currentUser, onExit }) => {
   const [loading, setLoading] = useState(true);
@@ -128,7 +127,7 @@ const ClinicalRecordPage = ({ appointmentId, currentUser, onExit }) => {
       <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 shadow-sm">
         <button
           onClick={handleExitClick}
-          className="flex items-center gap-2 text-sm font-bold text-accent hover:text-primary transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 rounded-full border border-borderClinik bg-white text-sm font-bold text-primary hover:bg-gray-50 hover:border-secondary transition-colors cursor-pointer shadow-sm"
         >
           <LuArrowLeft size={18} />
           Regresar
@@ -161,31 +160,24 @@ const ClinicalRecordPage = ({ appointmentId, currentUser, onExit }) => {
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-            <p className="text-sm text-accent mb-6">
-              Cliente:{" "}
-              <strong className="text-primary">
-                {appointmentData?.customer?.name}
-              </strong>
-            </p>
-
             {brand === "Modelha DK" && (
-              <>
-                <ModelhaAssessmentForm onSubmit={handleSave} saving={saving} />
-                <AssessmentPhotosSection
-                  pendingUploads={pendingPhotos}
-                  onFileSelect={handlePhotoSelect}
-                />
-              </>
+              <ModelhaAssessmentForm
+                onSubmit={handleSave}
+                saving={saving}
+                customerName={appointmentData?.customer?.name}
+                pendingPhotos={pendingPhotos}
+                onPhotoSelect={handlePhotoSelect}
+              />
             )}
 
             {brand === "Depilclinik" && (
-              <>
-                <LaserAssessmentForm onSubmit={handleSave} saving={saving} />{" "}
-                <AssessmentPhotosSection
-                  pendingUploads={pendingPhotos}
-                  onFileSelect={handlePhotoSelect}
-                />
-              </>
+              <LaserAssessmentForm
+                onSubmit={handleSave}
+                saving={saving}
+                customerName={appointmentData?.customer?.name}
+                pendingPhotos={pendingPhotos}
+                onPhotoSelect={handlePhotoSelect}
+              />
             )}
           </div>
         )}

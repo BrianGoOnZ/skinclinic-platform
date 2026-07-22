@@ -11,8 +11,16 @@ import {
   DIET_OPTIONS,
   SKIN_PRACTICES,
 } from "../../constants/clinicalRecordOptions";
+import AssessmentPhotosSection from "./AssessmentPhotosSection";
 
-const TABS = ["General", "Hábitos", "Padecimientos", "Corporal", "Facial"];
+const TABS = [
+  "General",
+  "Hábitos",
+  "Padecimientos",
+  "Corporal",
+  "Facial",
+  "Fotos",
+];
 
 const BACKGROUND_ITEMS = [
   { key: "hasDiabetes", label: "Diabetes / prediabetes" },
@@ -204,7 +212,13 @@ const initialState = {
   },
 };
 
-const ModelhaAssessmentForm = ({ onSubmit, saving }) => {
+const ModelhaAssessmentForm = ({
+  onSubmit,
+  saving,
+  customerName,
+  pendingPhotos = {},
+  onPhotoSelect,
+}) => {
   const [activeTab, setActiveTab] = useState("General");
   const [form, setForm] = useState(initialState);
 
@@ -306,20 +320,30 @@ const ModelhaAssessmentForm = ({ onSubmit, saving }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-3">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
-              activeTab === tab
-                ? "bg-linear-to-r from-secondary to-depil text-white"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="sticky top-16 z-10 -mx-8 px-8 pt-2 pb-3 bg-white border-b border-gray-100">
+        {customerName && (
+          <p className="text-xs text-accent mb-2">
+            Cliente:{" "}
+            <strong className="text-primary font-semibold">
+              {customerName}
+            </strong>
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === tab
+                  ? "bg-linear-to-r from-secondary to-depil text-white"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {activeTab === "General" && (
@@ -460,7 +484,7 @@ const ModelhaAssessmentForm = ({ onSubmit, saving }) => {
           </div>
 
           <div className="border-t border-gray-100 pt-4">
-            <p className="text-sm font-bold text-secondary mb-3">Mujer</p>
+            <p className="text-sm font-bold text-primary mb-3">Mujer</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextField
                 label="Edad de inicio de periodo / menopausia"
@@ -975,6 +999,13 @@ const ModelhaAssessmentForm = ({ onSubmit, saving }) => {
             }
           />
         </div>
+      )}
+
+      {activeTab === "Fotos" && (
+        <AssessmentPhotosSection
+          pendingUploads={pendingPhotos}
+          onFileSelect={onPhotoSelect}
+        />
       )}
 
       <div className="border-t border-gray-100 pt-4 flex justify-end">

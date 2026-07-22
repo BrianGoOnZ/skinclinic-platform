@@ -5,8 +5,9 @@ import {
   SelectField,
   CheckboxGrid,
 } from "./FormField";
+import AssessmentPhotosSection from "./AssessmentPhotosSection";
 
-const TABS = ["Información", "Historia Clínica"];
+const TABS = ["Información", "Historia Clínica", "Fotos"];
 
 const AREAS = ["Extra Chicas", "Chicas", "Mediana", "Grande", "Full Body"];
 
@@ -51,7 +52,13 @@ const initialState = {
   clinicalConditions: {},
 };
 
-const LaserAssessmentForm = ({ onSubmit, saving }) => {
+const LaserAssessmentForm = ({
+  onSubmit,
+  saving,
+  customerName,
+  pendingPhotos = {},
+  onPhotoSelect,
+}) => {
   const [activeTab, setActiveTab] = useState("Información");
   const [form, setForm] = useState(initialState);
 
@@ -96,20 +103,30 @@ const LaserAssessmentForm = ({ onSubmit, saving }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-3">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
-              activeTab === tab
-                ? "bg-linear-to-r from-depil to-secondary text-white"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="sticky top-16 z-10 -mx-8 px-8 pt-2 pb-3 bg-white border-b border-gray-100">
+        {customerName && (
+          <p className="text-xs text-accent mb-2">
+            Cliente:{" "}
+            <strong className="text-primary font-semibold">
+              {customerName}
+            </strong>
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === tab
+                  ? "bg-linear-to-r from-depil to-secondary text-white"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {activeTab === "Información" && (
@@ -298,6 +315,13 @@ const LaserAssessmentForm = ({ onSubmit, saving }) => {
             />
           </div>
         </div>
+      )}
+
+      {activeTab === "Fotos" && (
+        <AssessmentPhotosSection
+          pendingUploads={pendingPhotos}
+          onFileSelect={onPhotoSelect}
+        />
       )}
 
       <div className="border-t border-gray-100 pt-4 flex justify-end">
