@@ -4,6 +4,7 @@ import api from "../services/api";
 import ConflictOverrideModal from "./ConflictOverrideModal";
 import CustomerAutocomplete from "./CustomerAutocomplete";
 import CheckoutModal from "./CheckoutModal";
+import { WheelDropdown, TimeWheelDropdown } from "./DateTimePickers";
 import {
   APPOINTMENT_STATUSES,
   STATUS_META,
@@ -24,16 +25,67 @@ const initialFormState = {
   status: "Programada",
 };
 
+const DAYS = Array.from({ length: 31 }, (_, i) => ({
+  value: String(i + 1).padStart(2, "0"),
+  label: String(i + 1),
+}));
+
+const MONTHS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => {
+  const y = CURRENT_YEAR - 1 + i;
+  return { value: String(y), label: String(y) };
+});
+
+const getTodayParts = () => {
+  const now = new Date();
+  return {
+    day: String(now.getDate()).padStart(2, "0"),
+    month: String(now.getMonth() + 1).padStart(2, "0"),
+    year: String(now.getFullYear()),
+  };
+};
+
 const toDatetimeLocalValue = (isoString) => {
   const date = new Date(isoString);
   const offsetMs = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 };
 
+const parseDateTimeLocal = (value) => {
+  if (!value) return { date: getTodayParts(), time: "" };
+  const [datePart, timePart] = value.split("T");
+  const [year, month, day] = datePart.split("-");
+  return { date: { day, month, year }, time: (timePart || "").slice(0, 5) };
+};
+
+const buildDateTimeLocal = (dateParts, time) => {
+  const { day, month, year } = dateParts;
+  if (!day || !month || !year || !time) return "";
+  return `${year}-${month}-${day}T${time}`;
+};
+
 const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   const isEditMode = Boolean(appointment);
 
   const [formData, setFormData] = useState(initialFormState);
+  const [dateParts, setDateParts] = useState(getTodayParts());
+  const [startHourMin, setStartHourMin] = useState("");
+  const [endHourMin, setEndHourMin] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [services, setServices] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
@@ -66,6 +118,17 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
           endTime: toDatetimeLocalValue(appointment.endTime),
           status: appointment.status,
         });
+
+        const startParsed = parseDateTimeLocal(
+          toDatetimeLocalValue(appointment.startTime),
+        );
+        const endParsed = parseDateTimeLocal(
+          toDatetimeLocalValue(appointment.endTime),
+        );
+        setDateParts(startParsed.date);
+        setStartHourMin(startParsed.time);
+        setEndHourMin(endParsed.time);
+
         setSelectedCustomer(
           appointment.customer
             ? {
@@ -77,6 +140,9 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
         );
       } else {
         setFormData(initialFormState);
+        setDateParts(getTodayParts());
+        setStartHourMin("");
+        setEndHourMin("");
         setSelectedCustomer(null);
       }
 
@@ -90,6 +156,20 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.marca, isOpen]);
+
+  useEffect(() => {
+    const value = buildDateTimeLocal(dateParts, startHourMin);
+    setFormData((prev) =>
+      prev.startTime === value ? prev : { ...prev, startTime: value },
+    );
+  }, [dateParts, startHourMin]);
+
+  useEffect(() => {
+    const value = buildDateTimeLocal(dateParts, endHourMin);
+    setFormData((prev) =>
+      prev.endTime === value ? prev : { ...prev, endTime: value },
+    );
+  }, [dateParts, endHourMin]);
 
   useEffect(() => {
     if (!formData.userId || !formData.startTime || !formData.endTime) {
@@ -167,6 +247,16 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
   const submitAppointment = async (force = false) => {
     if (!selectedCustomer) {
       setError("Selecciona o registra un cliente para continuar");
+      return;
+    }
+
+    if (!formData.startTime || !formData.endTime) {
+      setError("Completa la fecha y la hora de inicio y fin");
+      return;
+    }
+
+    if (new Date(formData.endTime) <= new Date(formData.startTime)) {
+      setError("La hora de fin debe ser posterior a la hora de inicio");
       return;
     }
 
@@ -278,35 +368,40 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
               <label className="block text-xs font-bold text-primary uppercase mb-1">
                 Estado
               </label>
-              <div className="flex flex-wrap gap-2">
-                {APPOINTMENT_STATUSES.map((status) => {
-                  const meta = STATUS_META[status];
-                  const isSelected = formData.status === status;
-                  return (
-                    <button
-                      type="button"
-                      key={status}
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, status }))
-                      }
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
-                        isSelected
-                          ? "text-white border-transparent"
-                          : "border-borderClinik text-primary hover:bg-gray-50"
-                      }`}
-                      style={isSelected ? { backgroundColor: meta.color } : {}}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{
-                          backgroundColor: isSelected ? "#fff" : meta.color,
-                        }}
-                      />
-                      {meta.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <WheelDropdown
+                label=""
+                value={formData.status}
+                options={APPOINTMENT_STATUSES.map((status) => ({
+                  value: status,
+                  label: STATUS_META[status].label,
+                  color: STATUS_META[status].color,
+                }))}
+                onChange={(status) =>
+                  setFormData((prev) => ({ ...prev, status }))
+                }
+                renderValue={(opt) => (
+                  <span className="flex items-center gap-2 truncate">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: opt.color }}
+                    />
+                    <span className="text-primary font-semibold truncate">
+                      {opt.label}
+                    </span>
+                  </span>
+                )}
+                renderOption={(opt, isSelected) => (
+                  <span className="flex items-center gap-2 truncate">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: isSelected ? "#fff" : opt.color,
+                      }}
+                    />
+                    <span className="truncate">{opt.label}</span>
+                  </span>
+                )}
+              />
             </div>
           )}
 
@@ -389,31 +484,43 @@ const AppointmentModal = ({ isOpen, onClose, onRefresh, appointment }) => {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-primary uppercase mb-1">
-                Inicio *
-              </label>
-              <input
-                type="datetime-local"
-                name="startTime"
-                required
-                value={formData.startTime}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+          <div className="p-3 rounded-xl border border-borderClinik bg-gray-50/50 flex flex-col gap-3">
+            <span className="text-xs font-black text-primary uppercase tracking-wide">
+              Fecha de la Cita *
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              <WheelDropdown
+                label="Día"
+                value={dateParts.day}
+                options={DAYS}
+                onChange={(v) => setDateParts((prev) => ({ ...prev, day: v }))}
+              />
+              <WheelDropdown
+                label="Mes"
+                value={dateParts.month}
+                options={MONTHS}
+                onChange={(v) =>
+                  setDateParts((prev) => ({ ...prev, month: v }))
+                }
+              />
+              <WheelDropdown
+                label="Año"
+                value={dateParts.year}
+                options={YEARS}
+                onChange={(v) => setDateParts((prev) => ({ ...prev, year: v }))}
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-primary uppercase mb-1">
-                Fin *
-              </label>
-              <input
-                type="datetime-local"
-                name="endTime"
-                required
-                value={formData.endTime}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-xl border border-borderClinik text-sm focus:outline-none focus:border-secondary bg-white"
+
+            <div className="grid grid-cols-2 gap-3">
+              <TimeWheelDropdown
+                label="Hora de Inicio *"
+                value={startHourMin}
+                onChange={setStartHourMin}
+              />
+              <TimeWheelDropdown
+                label="Hora de Fin *"
+                value={endHourMin}
+                onChange={setEndHourMin}
               />
             </div>
           </div>
