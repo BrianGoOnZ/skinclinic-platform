@@ -122,14 +122,21 @@ const Employees = ({ currentUserRole }) => {
           />
         </div>
 
-        {isAdmin && (
-          <button
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md self-start sm:self-center"
-            onClick={handleOpenCreate}
-          >
-            <LuPlus size={14} /> Nuevo Colaborador
-          </button>
-        )}
+        <div className="flex items-center gap-3 self-start sm:self-center">
+          <span className="px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold whitespace-nowrap">
+            {filteredEmployees.length} colaborador
+            {filteredEmployees.length !== 1 ? "es" : ""}
+          </span>
+
+          {isAdmin && (
+            <button
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-linear-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+              onClick={handleOpenCreate}
+            >
+              <LuPlus size={14} /> Nuevo Colaborador
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
@@ -147,9 +154,9 @@ const Employees = ({ currentUserRole }) => {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-150">
               <thead>
-                <tr className="border-b border-gray-100 bg-gradient-to-r from-secondary/5 to-depil/5">
+                <tr className="border-b border-gray-100 bg-linear-to-r from-secondary/5 to-depil/5">
                   <th className="p-4 text-xs font-bold text-primary w-[45%]">
                     Colaborador
                   </th>
@@ -172,7 +179,7 @@ const Employees = ({ currentUserRole }) => {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-secondary to-depil flex items-center justify-center text-white font-bold text-xs shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-linear-to-br from-secondary to-depil flex items-center justify-center text-white font-bold text-xs shrink-0">
                           {getInitials(emp.name)}
                         </div>
                         <div className="flex flex-col min-w-0">

@@ -101,33 +101,40 @@ const ServicesPage = ({ currentUserRole }) => {
   return (
     <div className="flex flex-col gap-6 w-full text-left">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
-          {["Modelha DK", "Depilclinik"].map((brand) => {
-            const isActive = brandFilter === brand;
-            const color = BRAND_COLORS[brand];
-            return (
-              <button
-                key={brand}
-                onClick={() => setBrandFilter(brand)}
-                className="px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer shadow-sm"
-                style={
-                  isActive
-                    ? {
-                        backgroundColor: color,
-                        borderColor: color,
-                        color: "#fff",
-                      }
-                    : {
-                        borderColor: "#e5e7eb",
-                        color: "#6b7280",
-                        backgroundColor: "#fff",
-                      }
-                }
-              >
-                {brand}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap gap-2">
+            {["Modelha DK", "Depilclinik"].map((brand) => {
+              const isActive = brandFilter === brand;
+              const color = BRAND_COLORS[brand];
+              return (
+                <button
+                  key={brand}
+                  onClick={() => setBrandFilter(brand)}
+                  className="px-5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer shadow-sm"
+                  style={
+                    isActive
+                      ? {
+                          backgroundColor: color,
+                          borderColor: color,
+                          color: "#fff",
+                        }
+                      : {
+                          borderColor: "#e5e7eb",
+                          color: "#6b7280",
+                          backgroundColor: "#fff",
+                        }
+                  }
+                >
+                  {brand}
+                </button>
+              );
+            })}
+          </div>
+
+          <span className="px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold whitespace-nowrap">
+            {filteredServices.length} servicio
+            {filteredServices.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
         {isAdmin && (

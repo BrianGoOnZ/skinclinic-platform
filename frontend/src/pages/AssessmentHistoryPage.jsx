@@ -89,6 +89,17 @@ const AssessmentHistoryPage = () => {
     })),
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+  const now = new Date();
+  const monthlyCount = combined.filter((record) => {
+    if (!record.createdAt) return false;
+    const created = new Date(record.createdAt);
+    return (
+      !isNaN(created.getTime()) &&
+      created.getMonth() === now.getMonth() &&
+      created.getFullYear() === now.getFullYear()
+    );
+  }).length;
+
   const filtered = combined.filter((r) =>
     r.customerName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -109,18 +120,24 @@ const AssessmentHistoryPage = () => {
 
   return (
     <div className="flex flex-col gap-6 w-full text-left">
-      <div className="relative max-w-md">
-        <LuSearch
-          size={18}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary"
-        />
-        <input
-          type="text"
-          placeholder="Buscar por nombre de cliente..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-borderClinik text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-white transition-shadow"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div className="relative max-w-md flex-1">
+          <LuSearch
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary"
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nombre de cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-borderClinik text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-white transition-shadow"
+          />
+        </div>
+
+        <span className="px-3 py-1.5 rounded-full bg-depil-soft text-depil text-xs font-bold whitespace-nowrap self-start sm:self-center">
+          {monthlyCount} expediente{monthlyCount !== 1 ? "s" : ""} este mes
+        </span>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">

@@ -118,14 +118,21 @@ const CustomersPage = ({ currentUserRole }) => {
           />
         </div>
 
-        {isAdmin && (
-          <button
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-linear-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md self-start sm:self-center"
-            onClick={handleOpenCreate}
-          >
-            <LuPlus size={14} /> Nuevo Cliente
-          </button>
-        )}
+        <div className="flex items-center gap-3 self-start sm:self-center">
+          <span className="px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold whitespace-nowrap">
+            {filteredCustomers.length} cliente
+            {filteredCustomers.length !== 1 ? "s" : ""}
+          </span>
+
+          {isAdmin && (
+            <button
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-linear-to-r from-secondary to-depil text-white font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+              onClick={handleOpenCreate}
+            >
+              <LuPlus size={14} /> Nuevo Cliente
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
