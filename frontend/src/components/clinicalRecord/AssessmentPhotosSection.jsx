@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { LuCamera, LuCheck, LuClock } from "react-icons/lu";
 
 const ANGLES = [
@@ -9,14 +9,39 @@ const ANGLES = [
   "135 Grados",
 ];
 
-const AssessmentPhotosSection = ({ pendingUploads, onFileSelect }) => {
+const AssessmentPhotosSection = ({ pendingUploads = {}, onFileSelect }) => {
   const [previews, setPreviews] = useState({});
+  const previewsRef = useRef(previews);
+
+  // Mantiene el ref sincronizado con el estado más reciente, sin que esto
+  // dispare el efecto de limpieza (ver abajo).
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+
+  // Solo se ejecuta al desmontar el componente (deps vacías), liberando
+  // TODAS las Object URLs creadas durante la sesión de una sola vez.
+  useEffect(() => {
+    return () => {
+      Object.values(previewsRef.current).forEach((url) => {
+        if (url && url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, []);
 
   const handleChange = (angle, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPreviews((prev) => ({ ...prev, [angle]: URL.createObjectURL(file) }));
+    // Libera la preview anterior de este ángulo específico si ya existía
+    if (previews[angle] && previews[angle].startsWith("blob:")) {
+      URL.revokeObjectURL(previews[angle]);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviews((prev) => ({ ...prev, [angle]: objectUrl }));
     onFileSelect(angle, file);
   };
 

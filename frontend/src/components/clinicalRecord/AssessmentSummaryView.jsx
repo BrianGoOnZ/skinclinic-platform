@@ -6,6 +6,7 @@ import {
   SKIN_PRACTICES,
   findLabel,
 } from "../../constants/clinicalRecordOptions";
+import AssessmentPhotosGallery from "./AssessmentPhotosGallery";
 
 const Section = ({ title, children, defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
@@ -278,6 +279,14 @@ const AssessmentSummaryView = ({ assessment }) => {
             />
           </>
         )}
+      </Section>
+
+      {/* 📸 Nueva sección de Fotografías con soporte multi-marca */}
+      <Section title="Fotografías" defaultOpen={false}>
+        <AssessmentPhotosGallery
+          assessmentId={assessment.assessmentId}
+          laserAssessmentId={assessment.laserAssessmentId}
+        />
       </Section>
 
       {assessment.lifestyleHabit && (
