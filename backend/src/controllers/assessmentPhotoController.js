@@ -1,6 +1,12 @@
+// backend/src/controllers/assessmentPhotoController.js
 import AssessmentPhoto from "../models/AssessmentPhoto.js";
-import cloudinary from "../config/cloudinary.js";
-import streamifier from "streamifier";
+import { compressImage } from "../utils/imageProcessor.js";
+import {
+  buildObjectKey,
+  uploadBufferToS3,
+  getPresignedUrl,
+  deleteFromS3,
+} from "../utils/s3Storage.js";
 
 const PHOTO_ANGLES = [
   "Frente",
@@ -11,8 +17,6 @@ const PHOTO_ANGLES = [
 ];
 
 // Crea las 5 filas placeholder (pendientes) para una sesión recién guardada.
-// Se llama internamente justo después de crear un Medical_Assessment o
-// Laser_Medical_Assessment, no se expone como ruta directa.
 export const createPendingPhotosForAssessment = async (
   { assessmentId, laserAssessmentId },
   transaction,
@@ -39,7 +43,9 @@ export const createPendingPhotosForAssessment = async (
   );
 };
 
-// Sube el archivo real a Cloudinary y actualiza la foto correspondiente
+// Comprime la imagen con sharp y la sube a S3. La columna photo_url ahora
+// guarda la KEY del objeto en S3 (no una URL pública, porque el bucket es
+// privado); la URL firmada se genera al momento de leer, no al guardar.
 export const uploadAssessmentPhoto = async (req, res) => {
   try {
     const { photoId } = req.params;
@@ -53,24 +59,31 @@ export const uploadAssessmentPhoto = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "skinclinic/assessment-photos" },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result);
-        },
+    const compressedBuffer = await compressImage(req.file.buffer);
+    const objectKey = buildObjectKey("skinclinic/assessment-photos");
+    await uploadBufferToS3(compressedBuffer, objectKey);
+
+    // Si ya había una imagen previa en este registro (re-subida), borramos
+    // la anterior de S3 para no dejar archivos huérfanos. Si el valor
+    // anterior es una URL http (dato legado de Cloudinary), lo ignoramos.
+    if (photo.photoUrl && !photo.photoUrl.startsWith("http")) {
+      await deleteFromS3(photo.photoUrl).catch((err) =>
+        console.error(
+          "No se pudo borrar la imagen anterior en S3:",
+          err.message,
+        ),
       );
-      streamifier.createReadStream(req.file.buffer).pipe(stream);
-    });
+    }
 
     await photo.update({
-      photoUrl: uploadResult.secure_url,
+      photoUrl: objectKey,
       isPending: false,
       uploadedByUserId: req.user.id,
     });
 
-    res.status(200).json(photo);
+    const presignedUrl = await getPresignedUrl(objectKey);
+
+    res.status(200).json({ ...photo.toJSON(), photoUrl: presignedUrl });
   } catch (error) {
     res.status(500).json({
       message: "Server error while uploading photo",
@@ -79,7 +92,7 @@ export const uploadAssessmentPhoto = async (req, res) => {
   }
 };
 
-// Lista las 5 fotos (subidas o pendientes) de un expediente específico
+// Lista las 5 fotos de un expediente, firmando cada URL de S3 al vuelo.
 export const getPhotosByAssessment = async (req, res) => {
   try {
     const { assessmentId, laserAssessmentId } = req.query;
@@ -97,7 +110,19 @@ export const getPhotosByAssessment = async (req, res) => {
       order: [["photo_id", "ASC"]],
     });
 
-    res.status(200).json(photos);
+    const withSignedUrls = await Promise.all(
+      photos.map(async (photo) => {
+        const plain = photo.toJSON();
+        // Compatibilidad con datos de prueba antiguos subidos a Cloudinary
+        // (URLs https ya públicas): esos se devuelven tal cual, sin firmar.
+        if (plain.photoUrl && !plain.photoUrl.startsWith("http")) {
+          plain.photoUrl = await getPresignedUrl(plain.photoUrl);
+        }
+        return plain;
+      }),
+    );
+
+    res.status(200).json(withSignedUrls);
   } catch (error) {
     res.status(500).json({
       message: "Server error while fetching photos",
